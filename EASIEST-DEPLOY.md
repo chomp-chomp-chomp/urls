@@ -32,7 +32,7 @@ This is the simplest possible way to get your URL shortener running. Everything 
 1. You're now on your worker page
 2. Click the **Quick Edit** button (top right)
 3. **Delete all the default code**
-4. Open the file: `worker-bundle.js` from this repository
+4. Open the file: `worker-bundle-fixed.js` from this repository
 5. **Copy all the code** (Ctrl+A, Ctrl+C or Cmd+A, Cmd+C)
 6. **Paste it** into the Cloudflare editor
 7. Click **Save and Deploy** button (top right)
@@ -148,7 +148,7 @@ curl -X POST https://chom.pm/api/shorten \
 - After adding environment variables, you must click "Save and Deploy"
 
 ### Admin page doesn't load / shows errors
-- Make sure you copied ALL the code from `worker-bundle.js`
+- Make sure you copied ALL the code from `worker-bundle-fixed.js`
 - Click "Save and Deploy" after pasting the code
 
 ### Custom domain not working
