@@ -5,7 +5,7 @@ compatibility_date = "2024-01-20"
 # KV namespace for storing short URLs
 [[kv_namespaces]]
 binding = "URLS"
-id = "template_worker_views"
+id = "477d2e500d5841aabd0c7ce842c49a0e"
 
 # Environment variables
 # SECURITY WARNING: Change this password before deployment!
