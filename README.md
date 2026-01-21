@@ -6,6 +6,7 @@ A simple, fast, and secure URL shortener built with Cloudflare Workers and KV st
 
 - ⚡ **Lightning Fast**: Built on Cloudflare's global edge network
 - 🔒 **Secure Admin Panel**: Password-protected admin interface
+- 🔑 **Public API**: API key authentication for external integration
 - 🎨 **Beautiful UI**: Modern, responsive admin interface
 - 📦 **KV Storage**: Serverless key-value storage for URLs
 - 🚀 **Easy Deployment**: One-command deployment to Cloudflare
@@ -66,15 +67,17 @@ urls/
    ```
 
 5. **Set Admin Password**:
-   - Edit `wrangler.toml` and change the `ADMIN_PASSWORD`:
+   - Edit `wrangler.toml` and change the `ADMIN_PASSWORD` and `API_KEY`:
      ```toml
      [vars]
      ADMIN_PASSWORD = "your-secure-password"
+     API_KEY = "your-api-key-here"
      ```
    
    **Security Note**: For production, use Wrangler secrets instead:
    ```bash
    npx wrangler secret put ADMIN_PASSWORD
+   npx wrangler secret put API_KEY
    ```
 
 ## Development
@@ -112,6 +115,64 @@ Your URL shortener will be available at `https://chomp-urls.<your-subdomain>.wor
    - Delete URLs you no longer need
 
 ### API Endpoints
+
+#### Public API (for external integration)
+
+##### Create Short URL (API Key Authentication)
+```
+POST /api/shorten
+X-API-Key: your-api-key-here
+Content-Type: application/json
+
+{
+  "url": "https://example.com/long/url",
+  "shortCode": "custom" // optional
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "shortCode": "abc123",
+  "url": "https://example.com/long/url",
+  "shortUrl": "https://your-worker.workers.dev/abc123"
+}
+```
+
+**Example with cURL:**
+```bash
+curl -X POST https://your-worker.workers.dev/api/shorten \
+  -H "X-API-Key: your-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/long/url"}'
+```
+
+**Example with JavaScript:**
+```javascript
+const response = await fetch('https://your-worker.workers.dev/api/shorten', {
+  method: 'POST',
+  headers: {
+    'X-API-Key': 'your-api-key-here',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    url: 'https://example.com/long/url',
+    shortCode: 'newsletter-jan' // optional
+  })
+});
+
+const data = await response.json();
+console.log(data.shortUrl);
+```
+
+**For more examples and integration patterns, see [example-usage.md](example-usage.md)** which includes:
+- Newsletter platform integrations (Mailchimp, SendGrid, Substack)
+- Examples in multiple languages (JavaScript, Python, PHP, Shell)
+- Best practices for batch processing and error handling
+- Troubleshooting guide
+
+#### Admin Endpoints
 
 #### Admin Login
 ```

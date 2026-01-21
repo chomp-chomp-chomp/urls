@@ -41,6 +41,16 @@ export function checkPassword(password, correctPassword) {
 }
 
 /**
+ * Verify API key
+ * @param {string} apiKey - API key to verify
+ * @param {string} correctApiKey - Correct API key
+ * @returns {boolean} True if API key is valid
+ */
+export function verifyApiKey(apiKey, correctApiKey) {
+  return apiKey && correctApiKey && apiKey === correctApiKey;
+}
+
+/**
  * Create JSON response
  * @param {Object} data - Data to return
  * @param {number} status - HTTP status code
@@ -53,7 +63,7 @@ export function jsonResponse(data, status = 200) {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
     },
   });
 }
