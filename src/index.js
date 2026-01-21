@@ -197,6 +197,7 @@ async function handleApiShorten(request, env) {
   } catch (error) {
     return jsonResponse({ error: 'Invalid request', message: error.message }, 400);
   }
+}
 
 /**
  * Handle login
