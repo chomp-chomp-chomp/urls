@@ -166,6 +166,12 @@ const data = await response.json();
 console.log(data.shortUrl);
 ```
 
+**For more examples and integration patterns, see [example-usage.md](example-usage.md)** which includes:
+- Newsletter platform integrations (Mailchimp, SendGrid, Substack)
+- Examples in multiple languages (JavaScript, Python, PHP, Shell)
+- Best practices for batch processing and error handling
+- Troubleshooting guide
+
 #### Admin Endpoints
 
 #### Admin Login
