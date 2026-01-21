@@ -23,7 +23,7 @@ export default {
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
         },
       });
     }
@@ -136,13 +136,13 @@ async function handleApi(request, env, path) {
 async function handleApiShorten(request, env) {
   try {
     // Verify API key
-    const apiKey = request.headers.get('X-API-Key') || request.headers.get('Authorization');
+    const apiKey = request.headers.get('X-API-Key');
     const correctApiKey = env.API_KEY;
     
     if (!verifyApiKey(apiKey, correctApiKey)) {
       return jsonResponse({ 
         error: 'Unauthorized', 
-        message: 'Valid API key required in X-API-Key or Authorization header' 
+        message: 'Valid API key required in X-API-Key header' 
       }, 401);
     }
 
