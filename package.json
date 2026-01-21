@@ -1,0 +1,22 @@
+{
+  "name": "chomp-urls",
+  "version": "1.0.0",
+  "description": "Cloudflare Workers URL shortener with KV storage",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "url-shortener",
+    "kv"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
