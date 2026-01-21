@@ -126,7 +126,7 @@ async function handleLogin(request, env) {
     const correctPassword = env.ADMIN_PASSWORD || 'changeme';
     
     if (checkPassword(password, correctPassword)) {
-      // Generate simple token (in production, use JWT or similar)
+      // Generate token with timestamp for expiration
       const token = btoa(`${password}:${Date.now()}`);
       return jsonResponse({ success: true, token });
     }
@@ -145,9 +145,22 @@ function verifyAuth(token, env) {
   
   try {
     const decoded = atob(token);
-    const [password] = decoded.split(':');
+    const [password, timestamp] = decoded.split(':');
+    
+    // Check password
     const correctPassword = env.ADMIN_PASSWORD || 'changeme';
-    return checkPassword(password, correctPassword);
+    if (!checkPassword(password, correctPassword)) {
+      return false;
+    }
+    
+    // Verify token is not expired (7 days)
+    const tokenAge = Date.now() - parseInt(timestamp);
+    const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+    if (tokenAge > maxAge) {
+      return false;
+    }
+    
+    return true;
   } catch (error) {
     return false;
   }

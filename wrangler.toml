@@ -8,5 +8,7 @@ binding = "URLS"
 id = "template_worker_views"
 
 # Environment variables
+# SECURITY WARNING: Change this password before deployment!
+# For production, use: wrangler secret put ADMIN_PASSWORD
 [vars]
 ADMIN_PASSWORD = "changeme"

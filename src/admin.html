@@ -268,6 +268,11 @@
                     document.getElementById('createForm').reset();
                     loadUrls();
                 } else {
+                    if (response.status === 401) {
+                        showMessage('message', 'Session expired. Please login again.', 'error');
+                        logout();
+                        return;
+                    }
                     showMessage('message', data.error || 'Failed to create URL', 'error');
                 }
             } catch (error) {
@@ -284,6 +289,7 @@
                 
                 if (!response.ok) {
                     if (response.status === 401) {
+                        showMessage('message', 'Session expired. Please login again.', 'error');
                         logout();
                         return;
                     }
@@ -293,6 +299,10 @@
                 const data = await response.json();
                 displayUrls(data.urls);
                 document.getElementById('urlCount').textContent = data.urls.length;
+                
+                // Switch to admin view if not already there
+                document.getElementById('authSection').classList.remove('active');
+                document.getElementById('adminSection').classList.add('active');
             } catch (error) {
                 showMessage('message', 'Failed to load URLs', 'error');
             }
@@ -331,6 +341,11 @@
                     showMessage('message', 'URL deleted successfully', 'success');
                     loadUrls();
                 } else {
+                    if (response.status === 401) {
+                        showMessage('message', 'Session expired. Please login again.', 'error');
+                        logout();
+                        return;
+                    }
                     const data = await response.json();
                     showMessage('message', data.error || 'Failed to delete URL', 'error');
                 }
