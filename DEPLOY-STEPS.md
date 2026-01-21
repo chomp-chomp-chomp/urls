@@ -5,8 +5,10 @@ Since you already have Wrangler authorized, run these commands in your terminal 
 ## Step 1: Create KV Namespace
 
 ```bash
-npx wrangler kv:namespace create "URLS"
+npx wrangler kv namespace create URLS
 ```
+
+Note: Wrangler v3 uses spaces, not colons!
 
 **Expected output:**
 ```
