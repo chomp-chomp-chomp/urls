@@ -2,6 +2,7 @@ import {
   generateShortCode,
   isValidUrl,
   checkPassword,
+  verifyApiKey,
   jsonResponse,
   htmlResponse,
 } from './utils.js';
@@ -30,6 +31,11 @@ export default {
     // Admin routes
     if (path.startsWith('/admin')) {
       return handleAdmin(request, env, path);
+    }
+
+    // Public API routes
+    if (path.startsWith('/api')) {
+      return handleApi(request, env, path);
     }
 
     // Root path - show simple info
@@ -111,6 +117,86 @@ async function handleAdmin(request, env, path) {
 
   return jsonResponse({ error: 'Not found' }, 404);
 }
+
+/**
+ * Handle public API routes
+ */
+async function handleApi(request, env, path) {
+  // Only allow POST for creating short URLs
+  if (path === '/api/shorten' && request.method === 'POST') {
+    return handleApiShorten(request, env);
+  }
+
+  return jsonResponse({ error: 'Not found' }, 404);
+}
+
+/**
+ * Handle API URL shortening with API key authentication
+ */
+async function handleApiShorten(request, env) {
+  try {
+    // Verify API key
+    const apiKey = request.headers.get('X-API-Key') || request.headers.get('Authorization');
+    const correctApiKey = env.API_KEY;
+    
+    if (!verifyApiKey(apiKey, correctApiKey)) {
+      return jsonResponse({ 
+        error: 'Unauthorized', 
+        message: 'Valid API key required in X-API-Key or Authorization header' 
+      }, 401);
+    }
+
+    const { url, shortCode } = await request.json();
+
+    if (!url) {
+      return jsonResponse({ error: 'URL is required' }, 400);
+    }
+
+    if (!isValidUrl(url)) {
+      return jsonResponse({ error: 'Invalid URL format' }, 400);
+    }
+
+    // Generate or validate short code
+    let code = shortCode;
+    if (code) {
+      // Check if custom code already exists
+      const existing = await env.URLS.get(code);
+      if (existing) {
+        return jsonResponse({ error: 'Short code already exists' }, 409);
+      }
+      // Validate custom code format
+      if (!/^[a-zA-Z0-9_-]{3,20}$/.test(code)) {
+        return jsonResponse({ 
+          error: 'Short code must be 3-20 characters (letters, numbers, _, -)' 
+        }, 400);
+      }
+    } else {
+      // Generate random code
+      code = generateShortCode();
+      // Ensure it doesn't exist (very unlikely but possible)
+      let attempts = 0;
+      while (await env.URLS.get(code) && attempts < 10) {
+        code = generateShortCode();
+        attempts++;
+      }
+    }
+
+    // Store the URL
+    await env.URLS.put(code, url);
+
+    // Get the full short URL
+    const requestUrl = new URL(request.url);
+    const shortUrl = `${requestUrl.protocol}//${requestUrl.host}/${code}`;
+
+    return jsonResponse({
+      success: true,
+      shortCode: code,
+      url,
+      shortUrl,
+    });
+  } catch (error) {
+    return jsonResponse({ error: 'Invalid request', message: error.message }, 400);
+  }
 
 /**
  * Handle login
