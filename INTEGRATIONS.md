@@ -4,6 +4,32 @@ Your URL shortener is now available on every platform! Choose your setup:
 
 ---
 
+## 🎨 Favicons & Touch Icons
+
+**Make your URL shortener look professional with custom icons**
+
+### What You Get:
+- ✅ Custom favicon in browser tabs
+- ✅ Beautiful icon when bookmarked
+- ✅ iOS home screen icon (Add to Home Screen)
+- ✅ Android home screen icon
+- ✅ PWA-ready with proper icons
+
+### Setup Time: **10 minutes**
+
+**📖 Full Guide:** See [ADD-ICONS-GUIDE.md](ADD-ICONS-GUIDE.md)
+
+### Quick Setup:
+1. Create icon files (16x16, 32x32, 180x180, 192x192, 512x512)
+2. Run `bash convert-icons-to-base64.sh` to convert to base64
+3. Update `worker-themed-no-titles.js` with the base64 data
+4. Deploy to Cloudflare
+5. Done!
+
+The worker is already configured with icon meta tags and serving routes. You just need to add your icon data!
+
+---
+
 ## 📱 iOS & iPadOS
 
 **Use Apple Shortcuts to add to Share Sheet**

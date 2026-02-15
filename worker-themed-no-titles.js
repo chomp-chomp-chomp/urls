@@ -10,6 +10,14 @@ const adminHtml = `<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URL Shortener - Admin</title>
+
+    <!-- Favicons and Touch Icons -->
+    <link rel="icon" href="https://ik.imagekit.io/chompchomp/favicon.ico">
+    <link rel="apple-touch-icon" href="https://ik.imagekit.io/chompchomp/apple-touch-icon.png">
+    <link rel="icon" sizes="192x192" href="https://ik.imagekit.io/chompchomp/icon-192.png">
+    <link rel="icon" sizes="512x512" href="https://ik.imagekit.io/chompchomp/Icon-512.png">
+    <meta name="theme-color" content="#e73b42">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
