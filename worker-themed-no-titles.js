@@ -12,12 +12,10 @@ const adminHtml = `<!DOCTYPE html>
     <title>URL Shortener - Admin</title>
 
     <!-- Favicons and Touch Icons -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/icon-16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+    <link rel="icon" href="https://ik.imagekit.io/chompchomp/favicon.ico">
+    <link rel="apple-touch-icon" href="https://ik.imagekit.io/chompchomp/apple-touch-icon.png">
+    <link rel="icon" sizes="192x192" href="https://ik.imagekit.io/chompchomp/icon-192.png">
+    <link rel="icon" sizes="512x512" href="https://ik.imagekit.io/chompchomp/Icon-512.png">
     <meta name="theme-color" content="#e73b42">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -995,59 +993,6 @@ async function handleRedirect(env, shortCode, request) {
   return Response.redirect(url, 302);
 }
 
-// Icon handler - serves favicons and touch icons
-function handleIconRequest(path) {
-  // Base64-encoded icon data
-  // INSTRUCTIONS: Replace these placeholders with your actual base64-encoded icon data
-  // Use the convert-icons-to-base64.sh script or run: base64 -i your-icon.png
-  const icons = {
-    '/favicon.ico': {
-      data: 'PLACEHOLDER_FAVICON_ICO_BASE64_HERE',
-      type: 'image/x-icon'
-    },
-    '/icon-16.png': {
-      data: 'PLACEHOLDER_16x16_PNG_BASE64_HERE',
-      type: 'image/png'
-    },
-    '/icon-32.png': {
-      data: 'PLACEHOLDER_32x32_PNG_BASE64_HERE',
-      type: 'image/png'
-    },
-    '/apple-touch-icon.png': {
-      data: 'PLACEHOLDER_180x180_PNG_BASE64_HERE',
-      type: 'image/png'
-    },
-    '/icon-192.png': {
-      data: 'PLACEHOLDER_192x192_PNG_BASE64_HERE',
-      type: 'image/png'
-    },
-    '/icon-512.png': {
-      data: 'PLACEHOLDER_512x512_PNG_BASE64_HERE',
-      type: 'image/png'
-    }
-  };
-
-  const icon = icons[path];
-  if (!icon || icon.data.startsWith('PLACEHOLDER_')) {
-    // Return 404 if icon not configured yet
-    return new Response('Icon not configured', { status: 404 });
-  }
-
-  // Decode base64 and return image
-  const binaryString = atob(icon.data);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-
-  return new Response(bytes, {
-    headers: {
-      'Content-Type': icon.type,
-      'Cache-Control': 'public, max-age=31536000',
-    },
-  });
-}
-
 // Main Worker
 export default {
   async fetch(request, env) {
@@ -1070,11 +1015,6 @@ export default {
 
     if (path.startsWith('/api')) {
       return handleApi(request, env, path);
-    }
-
-    // Serve favicon and touch icons
-    if (path === '/favicon.ico' || path.match(/^\/(icon-\d+|apple-touch-icon)\.png$/)) {
-      return handleIconRequest(path);
     }
 
     if (path === '/') {
