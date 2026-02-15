@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Shortener</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 350px;
+      padding: 20px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #fdfdfd;
+      color: #353535;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #231f1f;
+        color: #d9d4d4;
+      }
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: #353535;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      h1 {
+        color: #d9d4d4;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #353535;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      label {
+        color: #d9d4d4;
+      }
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      background: #ffffff;
+      color: #353535;
+      transition: border-color 0.2s;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      input {
+        background: #2b2626;
+        color: #d9d4d4;
+        border-color: #3b3636;
+      }
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #e73b42;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #e73b42;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #d12d34;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      button {
+        background: #ff6b7a;
+      }
+      button:hover {
+        background: #ff8590;
+      }
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 15px;
+      padding: 12px;
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      display: none;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .result {
+        background: #2b2626;
+        border-color: #3b3636;
+      }
+    }
+
+    .result.success {
+      display: block;
+      border-color: #28a745;
+    }
+
+    .result.error {
+      display: block;
+      border-color: #e73b42;
+    }
+
+    .result-label {
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #7d7d7d;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .result-label {
+        color: #b9b4b4;
+      }
+    }
+
+    .result-url {
+      font-size: 14px;
+      font-weight: 600;
+      color: #e73b42;
+      word-break: break-all;
+      cursor: pointer;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .result-url {
+        color: #ff6b7a;
+      }
+    }
+
+    .result-url:hover {
+      text-decoration: underline;
+    }
+
+    .message {
+      font-size: 13px;
+      color: #7d7d7d;
+      margin-top: 8px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .message {
+        color: #b9b4b4;
+      }
+    }
+
+    .settings-link {
+      display: block;
+      text-align: center;
+      margin-top: 15px;
+      font-size: 12px;
+      color: #7d7d7d;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .settings-link {
+        color: #b9b4b4;
+      }
+    }
+
+    .settings-link:hover {
+      color: #e73b42;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .settings-link:hover {
+        color: #ff6b7a;
+      }
+    }
+
+    .settings-panel {
+      display: none;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .settings-panel {
+        border-top-color: #3b3636;
+      }
+    }
+
+    .settings-panel.active {
+      display: block;
+    }
+
+    .tip {
+      font-size: 11px;
+      color: #9d9d9d;
+      margin-top: 4px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .tip {
+        color: #948f8f;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🔗 URL Shortener</h1>
+
+  <div class="form-group">
+    <label for="url">URL to Shorten</label>
+    <input type="url" id="url" placeholder="https://example.com/long/url" />
+  </div>
+
+  <div class="form-group">
+    <label for="shortCode">Custom Short Code (optional)</label>
+    <input type="text" id="shortCode" placeholder="my-custom-code" />
+  </div>
+
+  <button id="shortenBtn">Shorten URL</button>
+
+  <div id="result" class="result">
+    <div class="result-label">Short URL (copied to clipboard!):</div>
+    <div id="resultUrl" class="result-url"></div>
+    <div class="message">✓ Copied to clipboard</div>
+  </div>
+
+  <a class="settings-link" id="settingsToggle">⚙️ Settings</a>
+
+  <div id="settingsPanel" class="settings-panel">
+    <div class="form-group">
+      <label for="apiKey">API Key</label>
+      <input type="password" id="apiKey" placeholder="Enter your API key" />
+      <div class="tip">Get your API key from Cloudflare Dashboard</div>
+    </div>
+    <button id="saveSettings">Save Settings</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
