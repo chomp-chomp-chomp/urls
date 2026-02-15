@@ -1,5 +1,5 @@
 name = "chomp-urls"
-main = "src/index.js"
+main = "worker-themed-no-titles.js"
 compatibility_date = "2024-01-20"
 
 # KV namespace for storing short URLs
