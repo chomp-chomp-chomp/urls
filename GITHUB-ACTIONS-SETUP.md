@@ -54,6 +54,20 @@ Your worker will now auto-deploy to Cloudflare whenever you push code! Here's ho
 - **Value:** Paste the Account ID from Step 2
 - Click **"Add secret"**
 
+### Add Third Secret (Admin Password):
+- Click **"New repository secret"** again
+- **Name:** `ADMIN_PASSWORD`
+- **Value:** Your admin panel password (e.g., "mySecurePassword123")
+- Click **"Add secret"**
+
+### Add Fourth Secret (API Key):
+- Click **"New repository secret"** again
+- **Name:** `API_KEY`
+- **Value:** Your API key for the shortener (e.g., "sk_live_abc123xyz789")
+- Click **"Add secret"**
+
+**Important:** These secrets are stored securely in GitHub and deployed to Cloudflare automatically. You only need to set them once!
+
 ---
 
 ## ✅ Step 4: Test the Deployment

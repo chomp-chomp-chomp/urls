@@ -8,9 +8,6 @@ binding = "URLS"
 id = "477d2e500d5841aabd0c7ce842c49a0e"
 
 # Environment variables
-# SECURITY WARNING: Change this password before deployment!
-# For production, use: wrangler secret put ADMIN_PASSWORD
-# For production, use: wrangler secret put API_KEY
+# These are non-sensitive configuration values
+# Secrets (ADMIN_PASSWORD, API_KEY) are set via GitHub Actions
 [vars]
-ADMIN_PASSWORD = "changeme"
-API_KEY = "your-api-key-here"
