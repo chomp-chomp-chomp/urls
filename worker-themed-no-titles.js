@@ -434,6 +434,7 @@ const adminHtml = `<!DOCTYPE html>
             border-radius: 8px;
             margin-bottom: 10px;
             border: 1px solid var(--color-border);
+            position: relative;
         }
 
         .url-header {
@@ -507,30 +508,33 @@ const adminHtml = `<!DOCTYPE html>
             gap: 4px;
         }
 
-        .url-actions {
-            display: flex;
-            gap: var(--spacing-xs);
-            flex-shrink: 0;
-            align-items: center;
-        }
-
         .icon-btn {
-            padding: 7px 12px;
+            padding: 5px 10px;
             width: auto;
-            font-size: 13px;
+            font-size: 12px;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
+            height: 28px;
+            box-sizing: border-box;
         }
 
-        .copy-btn { background: var(--color-accent); }
+        .copy-btn {
+            background: var(--color-accent);
+            flex-shrink: 0;
+        }
         .copy-btn:hover { background: var(--color-accent-hover); }
         .copy-btn.copied { background: #28a745; }
 
         .edit-btn { background: var(--color-text-muted); }
         .edit-btn:hover { background: var(--color-text); }
 
-        .delete-btn { background: var(--color-text-muted); }
+        .delete-btn {
+            background: var(--color-text-muted);
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+        }
         .delete-btn:hover { background: var(--color-text); }
 
         .message {
@@ -622,10 +626,10 @@ const adminHtml = `<!DOCTYPE html>
 
         .url-item-row {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
         }
 
-        .url-item-content { flex: 1; min-width: 0; }
+        .url-item-content { flex: 1; min-width: 0; padding-bottom: 20px; }
 
         .show-more-btn {
             width: 100%;
@@ -766,9 +770,9 @@ const adminHtml = `<!DOCTYPE html>
 
         .url-title {
             font-weight: 500;
-            font-size: 13px;
+            font-size: 14px;
             color: var(--color-text);
-            margin-top: 2px;
+            margin-top: 4px;
             display: flex;
             align-items: center;
             gap: 5px;
@@ -1108,15 +1112,13 @@ const adminHtml = `<!DOCTYPE html>
                                 '<a href="/' + item.shortCode + '" class="short-url" target="_blank">/' + item.shortCode + '</a>' +
                                 '<button class="edit-btn icon-btn" onclick="startEdit(\\'' + item.shortCode + '\\')" title="Edit short code">${icons.edit}</button>' +
                             '</div>' +
-                            '<div class="url-actions">' +
-                                '<button class="copy-btn icon-btn" onclick="copyUrl(\\'' + item.shortCode + '\\', this)">${icons.copy} Copy</button>' +
-                                '<button class="delete-btn icon-btn" onclick="deleteUrl(\\'' + item.shortCode + '\\')">${icons.trash}</button>' +
-                            '</div>' +
+                            '<button class="copy-btn icon-btn" onclick="copyUrl(\\'' + item.shortCode + '\\', this)">${icons.copy} Copy</button>' +
                         '</div>' +
                         titleHtml +
                         '<div class="long-url">' + escapeHtml(item.url) + '</div>' +
                         createdHtml +
                         statsHtml +
+                        '<button class="delete-btn icon-btn" onclick="deleteUrl(\\'' + item.shortCode + '\\')">${icons.trash}</button>' +
                     '</div>' +
                 '</div></div>';
             }).join('');
