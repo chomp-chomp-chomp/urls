@@ -1004,14 +1004,15 @@ const adminHtml = `<!DOCTYPE html>
                 }
                 const data = await response.json();
 
-                const urlsWithData = await Promise.all(data.urls.map(async item => {
-                    const stats = await fetchStats(item.shortCode);
-                    return { ...item, stats };
+                const statsResults = await Promise.allSettled(
+                    data.urls.map(item => fetchStats(item.shortCode))
+                );
+                const urlsWithData = data.urls.map((item, i) => ({
+                    ...item,
+                    stats: statsResults[i].status === 'fulfilled' ? statsResults[i].value : null,
                 }));
 
                 allUrls = urlsWithData;
-                applySearch();
-                displayLimit = PAGE_SIZE;
                 selectedCodes.clear();
                 document.getElementById('selectAll').checked = false;
 
@@ -1022,8 +1023,7 @@ const adminHtml = `<!DOCTYPE html>
                 document.getElementById('authSection').classList.remove('active');
                 document.getElementById('adminSection').classList.add('active');
 
-                renderList();
-                updateBulkBar();
+                applySearch();
             } catch (error) {
                 showMessage('message', 'Failed to load URLs', 'error');
             }
@@ -1173,10 +1173,14 @@ const adminHtml = `<!DOCTYPE html>
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    showMessage('message', data.deleted + ' URL(s) deleted', 'success');
+                    allUrls = allUrls.filter(u => !selectedCodes.has(u.shortCode));
                     selectedCodes.clear();
                     document.getElementById('selectAll').checked = false;
-                    loadUrls();
+                    document.getElementById('urlCount').textContent = allUrls.length;
+                    const totalClicks = allUrls.reduce((sum, item) => sum + (item.stats?.clicks || 0), 0);
+                    document.getElementById('totalClicks').textContent = totalClicks.toLocaleString();
+                    applySearch();
+                    showMessage('message', data.deleted + ' URL(s) deleted', 'success');
                 } else {
                     if (response.status === 401) { showMessage('message', 'Session expired.', 'error'); logout(); return; }
                     const data = await response.json();
@@ -1318,8 +1322,13 @@ const adminHtml = `<!DOCTYPE html>
                     headers: { 'Authorization': authToken }
                 });
                 if (response.ok) {
+                    allUrls = allUrls.filter(u => u.shortCode !== shortCode);
+                    selectedCodes.delete(shortCode);
+                    document.getElementById('urlCount').textContent = allUrls.length;
+                    const totalClicks = allUrls.reduce((sum, item) => sum + (item.stats?.clicks || 0), 0);
+                    document.getElementById('totalClicks').textContent = totalClicks.toLocaleString();
+                    applySearch();
                     showMessage('message', 'URL deleted successfully', 'success');
-                    loadUrls();
                 } else {
                     if (response.status === 401) { showMessage('message', 'Session expired.', 'error'); logout(); return; }
                     const data = await response.json();
@@ -1557,9 +1566,10 @@ function verifyAuth(token, env) {
 
   try {
     const decoded = atob(token);
-    const parts = decoded.split(':');
-    const password = parts[0];
-    const timestamp = parts[1];
+    const lastColon = decoded.lastIndexOf(':');
+    if (lastColon === -1) return false;
+    const password = decoded.substring(0, lastColon);
+    const timestamp = decoded.substring(lastColon + 1);
 
     const correctPassword = env.ADMIN_PASSWORD || 'changeme';
     if (!checkPassword(password, correctPassword)) {
