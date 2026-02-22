@@ -12,10 +12,10 @@ const adminHtml = `<!DOCTYPE html>
     <title>URL Shortener - Admin</title>
 
     <!-- Favicons and Touch Icons -->
-    <link rel="icon" href="https://ik.imagekit.io/chompchomp/favicon.ico">
-    <link rel="apple-touch-icon" href="https://ik.imagekit.io/chompchomp/apple-touch-icon.png">
-    <link rel="icon" sizes="192x192" href="https://ik.imagekit.io/chompchomp/icon-192.png">
-    <link rel="icon" sizes="512x512" href="https://ik.imagekit.io/chompchomp/Icon-512.png">
+    <link rel="icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon.ico">
+    <link rel="apple-touch-icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/apple-touch-icon.png">
+    <link rel="icon" sizes="192x192" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-192.png">
+    <link rel="icon" sizes="512x512" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-512.png">
     <meta name="theme-color" content="#e73b42">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">

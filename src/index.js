@@ -45,6 +45,12 @@ export default {
         <html>
           <head>
             <title>URL Shortener</title>
+            <link rel="apple-touch-icon" sizes="180x180" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/apple-touch-icon.png">
+            <link rel="icon" type="image/png" sizes="16x16" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon-16x16.png">
+            <link rel="icon" type="image/png" sizes="32x32" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon-32x32.png">
+            <link rel="icon" type="image/x-icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon.ico">
+            <link rel="icon" type="image/png" sizes="192x192" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-192.png">
+            <link rel="icon" type="image/png" sizes="512x512" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-512.png">
             <style>
               body {
                 font-family: sans-serif;
@@ -359,6 +365,12 @@ async function handleRedirect(env, shortCode) {
       <html>
         <head>
           <title>Not Found</title>
+          <link rel="apple-touch-icon" sizes="180x180" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/apple-touch-icon.png">
+          <link rel="icon" type="image/png" sizes="16x16" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon-16x16.png">
+          <link rel="icon" type="image/png" sizes="32x32" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon-32x32.png">
+          <link rel="icon" type="image/x-icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon.ico">
+          <link rel="icon" type="image/png" sizes="192x192" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-192.png">
+          <link rel="icon" type="image/png" sizes="512x512" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-512.png">
           <style>
             body {
               font-family: sans-serif;
