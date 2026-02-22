@@ -41,21 +41,17 @@ The worker is already configured with icon meta tags and serving routes. You jus
 - ✅ Siri integration possible
 - ✅ Home Screen widget option
 
-### Setup Time: **3 minutes**
+### Setup Time: **5 minutes**
 
 **📖 Full Guide:** See [IOS-SHORTCUTS.md](IOS-SHORTCUTS.md)
 
 ### Quick Setup:
-1. Open Shortcuts app
-2. Create new shortcut
-3. Add these actions:
-   - Receive URLs from Share Sheet
-   - Get Contents of URL (POST to chom.pm/api/shorten with API key)
-   - Get Dictionary Value ("shortUrl")
-   - Copy to Clipboard
-   - Show Notification
-4. Enable "Show in Share Sheet"
-5. Done!
+1. Open **IOS-SHORTCUTS.md** and follow the exact action-by-action build
+2. Add **Get Contents of URL** with POST + JSON body (`url: Shortcut Input`)
+3. Add headers: `Content-Type` and `X-API-Key`
+4. Extract `shortUrl`, copy to clipboard, show notification
+5. Enable **Show in Share Sheet** for URL types
+6. Done!
 
 ### Usage:
 - Tap Share button on any page
@@ -83,13 +79,12 @@ The worker is already configured with icon meta tags and serving routes. You jus
 **📖 Full Guide:** See [chrome-extension/README.md](chrome-extension/README.md)
 
 ### Quick Setup:
-1. Create icon files (16x16, 48x48, 128x128 pixels)
-2. Open chrome://extensions
-3. Enable Developer Mode
-4. Click "Load unpacked"
-5. Select `chrome-extension` folder
-6. Enter API key in settings
-7. Done!
+1. Open chrome://extensions
+2. Enable Developer Mode
+3. Click "Load unpacked"
+4. Select `chrome-extension` folder (icons are already bundled)
+5. Enter API key in extension settings
+6. Done!
 
 ### Usage:
 - **Click extension icon** → Current page shortened → Copied!

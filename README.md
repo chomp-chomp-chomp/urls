@@ -274,6 +274,32 @@ npm run tail
 - Ensure you're logged in: `npx wrangler whoami`
 - Check your Cloudflare account has Workers enabled
 
+
+### Git PR Branch Repair ("src refspec work does not match any")
+If pushing your PR branch fails with `src refspec work does not match any`, run:
+
+```bash
+set -euo pipefail
+
+pwd
+git rev-parse --is-inside-work-tree
+git remote -v
+
+# Make sure we have current refs
+git fetch --all --prune
+
+# Create or reset local `work` branch to the known-good commit
+git checkout -B work 4bbe064
+
+# Push branch for PR compare (force-with-lease is safe for rewritten history)
+git push --force-with-lease -u origin work
+
+# Optional sanity checks
+git log --oneline --decorate -3
+git diff --name-status c81637b..work
+rg -n "icon16|icon48|icon128|default_icon|\"icons\"" chrome-extension/manifest.json chrome-extension/README.md
+```
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
