@@ -29,6 +29,8 @@ const icons = {
   mousePointer: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>',
   x: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
   share: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
+  search: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  tag: '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
 };
 
 // ---------------------------------------------------------------------------
@@ -167,6 +169,8 @@ const guideHtml = `<!DOCTYPE html>
             <p>Tap Share on any page &rarr; choose <strong>Shorten URL</strong> &rarr; the short link is copied to your clipboard.</p>
 
             <div class="note"><strong>Tip:</strong> To allow custom short codes, add an <strong>Ask for Input</strong> action before step 3 and pass the result as the <code>shortCode</code> JSON key.</div>
+
+            <div class="note"><strong>Titles:</strong> To set a title, add <strong>Get Name of Shortcut Input</strong> before step 3 to get the page title. Pass it as the <code>title</code> JSON key alongside <code>url</code>. You can also add an <strong>Ask for Input</strong> to let yourself edit the title before saving.</div>
         </div>
 
         <div class="guide-section">
@@ -186,6 +190,7 @@ const guideHtml = `<!DOCTYPE html>
                 <li><strong>Right-click any link</strong> &rarr; shortens that link directly.</li>
                 <li><strong>Keyboard shortcut:</strong> <code>Ctrl+Shift+S</code> (Windows/Linux) or <code>Cmd+Shift+S</code> (macOS).</li>
             </ul>
+            <div class="note"><strong>Titles:</strong> The extension automatically sends the page title. You can edit it in the popup before shortening, or later from the admin panel.</div>
         </div>
 
         <div class="guide-section">
@@ -194,13 +199,13 @@ const guideHtml = `<!DOCTYPE html>
 
             <h3>Setup</h3>
             <div class="step"><span class="step-number">1</span><p>Copy the code below and <strong>replace <code>YOUR-API-KEY</code></strong> with your actual key.</p></div>
-            <pre><code>javascript:(function(){const url=window.location.href;const apiKey='YOUR-API-KEY';const domain='https://chom.pm';fetch(domain+'/api/shorten',{method:'POST',headers:{'X-API-Key':apiKey,'Content-Type':'application/json'},body:JSON.stringify({url:url})}).then(r=>r.json()).then(d=>{if(d.success){navigator.clipboard.writeText(d.shortUrl);alert('Short URL copied!\\n'+d.shortUrl);}else{alert('Error: '+d.error);}}).catch(e=>alert('Network error: '+e.message));})();</code></pre>
+            <pre><code>javascript:(function(){const url=window.location.href;const title=document.title;const apiKey='YOUR-API-KEY';const domain='https://chom.pm';fetch(domain+'/api/shorten',{method:'POST',headers:{'X-API-Key':apiKey,'Content-Type':'application/json'},body:JSON.stringify({url:url,title:title})}).then(r=>r.json()).then(d=>{if(d.success){navigator.clipboard.writeText(d.shortUrl);alert('Short URL copied!\\n'+d.shortUrl);}else{alert('Error: '+d.error);}}).catch(e=>alert('Network error: '+e.message));})();</code></pre>
             <div class="step"><span class="step-number">2</span><p>Create a new bookmark in your browser. Set the <strong>Name</strong> to <em>Shorten URL</em> and paste the code as the <strong>URL</strong>.</p></div>
 
             <h3>Usage</h3>
             <p>Navigate to any page and click the bookmark. The short URL is created and copied to your clipboard.</p>
 
-            <div class="note"><strong>Custom codes:</strong> For a version that prompts for a custom short code, add <code>const code=prompt('Custom code (blank for random):');</code> and include <code>shortCode:code</code> in the JSON body.</div>
+            <div class="note"><strong>Custom codes &amp; titles:</strong> The bookmarklet automatically captures the page title. For a version that also prompts for a custom short code, add <code>const code=prompt('Custom code (blank for random):');</code> and include <code>shortCode:code</code> in the JSON body. You can edit titles later from the admin panel.</div>
 
             <div class="note"><strong>Security:</strong> Your API key is visible in the bookmark. This is fine for personal use on your own devices &mdash; don't share the bookmark itself.</div>
         </div>
@@ -219,6 +224,7 @@ X-API-Key: YOUR-API-KEY</code></pre>
             <h3>Request body</h3>
             <pre><code>{
   "url": "https://example.com/long/url",
+  "title": "Optional page title",
   "shortCode": "optional-custom-code"
 }</code></pre>
 
@@ -227,6 +233,7 @@ X-API-Key: YOUR-API-KEY</code></pre>
   "success": true,
   "shortCode": "abc123",
   "url": "https://example.com/long/url",
+  "title": "Optional page title",
   "shortUrl": "https://chom.pm/abc123"
 }</code></pre>
 
@@ -271,7 +278,7 @@ shorten() {
 }
 # Usage:  shorten "https://example.com"</code></pre>
 
-            <div class="note"><strong>Parameters:</strong> <code>url</code> (required) must start with <code>http://</code> or <code>https://</code>. <code>shortCode</code> (optional) must be 3-20 characters: letters, numbers, underscore, or hyphen.</div>
+            <div class="note"><strong>Parameters:</strong> <code>url</code> (required) must start with <code>http://</code> or <code>https://</code>. <code>title</code> (optional) a label for the URL, up to 200 characters. <code>shortCode</code> (optional) must be 3-20 characters: letters, numbers, underscore, or hyphen.</div>
         </div>
     </div>
 </body>
@@ -726,6 +733,108 @@ const adminHtml = `<!DOCTYPE html>
         }
 
         h2 { color: var(--color-text); font-weight: 600; }
+
+        .search-bar {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            border: 2px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: var(--font-primary), var(--font-fallback), sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            transition: border-color 0.3s;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--color-accent);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-light);
+            display: flex;
+            pointer-events: none;
+        }
+
+        .url-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--color-text);
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .url-title svg { color: var(--color-text-muted); flex-shrink: 0; }
+
+        .url-title-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .no-title {
+            color: var(--color-text-light);
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        .title-edit-btn {
+            background: none;
+            border: none;
+            color: var(--color-text-light);
+            cursor: pointer;
+            padding: 2px;
+            width: auto;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .title-edit-btn:hover {
+            color: var(--color-accent);
+            background: none;
+            transform: none;
+        }
+
+        .title-edit-inline {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 2px;
+        }
+
+        .title-edit-inline input {
+            flex: 1;
+            padding: 3px 8px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 2px solid var(--color-accent);
+            border-radius: 4px;
+            background: var(--color-bg);
+            color: var(--color-text);
+        }
+
+        .title-edit-inline button {
+            width: auto;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .search-match {
+            background: rgba(231, 59, 66, 0.15);
+            border-radius: 2px;
+        }
     </style>
 </head>
 <body>
@@ -765,6 +874,10 @@ const adminHtml = `<!DOCTYPE html>
                     <input type="url" id="longUrl" placeholder="https://example.com/very/long/url" required>
                 </div>
                 <div class="form-group">
+                    <label for="title">Title (optional)</label>
+                    <input type="text" id="title" placeholder="e.g. Team standup notes" maxlength="200">
+                </div>
+                <div class="form-group">
                     <label for="shortCode">Custom Short Code (optional)</label>
                     <input type="text" id="shortCode" placeholder="Leave blank for random code">
                 </div>
@@ -772,6 +885,10 @@ const adminHtml = `<!DOCTYPE html>
             </form>
 
             <div class="url-list">
+                <div class="search-bar">
+                    <span class="search-icon">${icons.search}</span>
+                    <input type="text" id="searchInput" placeholder="Search titles and URLs..." oninput="applySearch()">
+                </div>
                 <div class="list-header">
                     <h2>Your Short URLs</h2>
                     <label class="select-all-label"><input type="checkbox" id="selectAll" class="url-checkbox"> Select all</label>
@@ -797,6 +914,8 @@ const adminHtml = `<!DOCTYPE html>
     <script>
         let authToken = '';
         let allUrls = [];
+        let filteredUrls = [];
+        let searchQuery = '';
         let displayLimit = 50;
         const PAGE_SIZE = 50;
         const selectedCodes = new Set();
@@ -837,12 +956,13 @@ const adminHtml = `<!DOCTYPE html>
         document.getElementById('createForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const longUrl = document.getElementById('longUrl').value;
+            const title = document.getElementById('title').value.trim() || undefined;
             const shortCode = document.getElementById('shortCode').value || undefined;
             try {
                 const response = await fetch('/admin/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': authToken },
-                    body: JSON.stringify({ url: longUrl, shortCode })
+                    body: JSON.stringify({ url: longUrl, title, shortCode })
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -865,7 +985,7 @@ const adminHtml = `<!DOCTYPE html>
         });
 
         document.getElementById('selectAll').addEventListener('change', function() {
-            const visible = allUrls.slice(0, displayLimit);
+            const visible = filteredUrls.slice(0, displayLimit);
             if (this.checked) {
                 visible.forEach(u => selectedCodes.add(u.shortCode));
             } else {
@@ -890,6 +1010,7 @@ const adminHtml = `<!DOCTYPE html>
                 }));
 
                 allUrls = urlsWithData;
+                applySearch();
                 displayLimit = PAGE_SIZE;
                 selectedCodes.clear();
                 document.getElementById('selectAll').checked = false;
@@ -917,6 +1038,23 @@ const adminHtml = `<!DOCTYPE html>
             }
         }
 
+        function applySearch() {
+            searchQuery = (document.getElementById('searchInput') ? document.getElementById('searchInput').value : '').toLowerCase().trim();
+            if (!searchQuery) {
+                filteredUrls = allUrls;
+            } else {
+                filteredUrls = allUrls.filter(item => {
+                    const t = (item.title || '').toLowerCase();
+                    const u = (item.url || '').toLowerCase();
+                    const sc = (item.shortCode || '').toLowerCase();
+                    return t.includes(searchQuery) || u.includes(searchQuery) || sc.includes(searchQuery);
+                });
+            }
+            displayLimit = PAGE_SIZE;
+            renderList();
+            updateBulkBar();
+        }
+
         function renderList() {
             const urlsList = document.getElementById('urlsList');
             if (allUrls.length === 0) {
@@ -925,7 +1063,13 @@ const adminHtml = `<!DOCTYPE html>
                 return;
             }
 
-            const visible = allUrls.slice(0, displayLimit);
+            if (filteredUrls.length === 0 && searchQuery) {
+                urlsList.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 20px;">No URLs match your search.</p>';
+                document.getElementById('showMoreWrap').style.display = 'none';
+                return;
+            }
+
+            const visible = filteredUrls.slice(0, displayLimit);
 
             urlsList.innerHTML = visible.map(item => {
                 const checked = selectedCodes.has(item.shortCode) ? 'checked' : '';
@@ -950,11 +1094,20 @@ const adminHtml = `<!DOCTYPE html>
                     ? '<div class="url-meta">${icons.calendar} ' + formatDate(item.createdAt) + '</div>'
                     : '';
 
+                const titleDisplay = item.title
+                    ? '<span class="url-title-text">' + escapeHtml(item.title) + '</span>'
+                    : '<span class="url-title-text no-title">No title</span>';
+
+                const titleHtml = '<div class="url-title" id="title-' + item.shortCode + '">${icons.tag} ' + titleDisplay +
+                    ' <button class="title-edit-btn" onclick="startTitleEdit(\\'' + item.shortCode + '\\', ' + (item.title ? '\\'' + escapeAttr(item.title) + '\\'' : 'null') + ')" title="Edit title">${icons.edit}</button>' +
+                    '</div>';
+
                 return '<div class="url-item"><div class="url-item-row">' +
                     '<input type="checkbox" class="url-checkbox" data-code="' + item.shortCode + '" ' + checked + ' onchange="toggleSelect(\\'' + item.shortCode + '\\', this.checked)">' +
                     '<div class="url-item-content">' +
                         '<div class="url-header">' +
                             '<div class="url-info">' +
+                                titleHtml +
                                 '<div class="short-url-row" id="row-' + item.shortCode + '">' +
                                     '<a href="/' + item.shortCode + '" class="short-url" target="_blank">/' + item.shortCode + '</a>' +
                                     '<button class="edit-btn icon-btn" onclick="startEdit(\\'' + item.shortCode + '\\')" title="Edit short code">${icons.edit}</button>' +
@@ -972,7 +1125,7 @@ const adminHtml = `<!DOCTYPE html>
                 '</div></div>';
             }).join('');
 
-            const remaining = allUrls.length - displayLimit;
+            const remaining = filteredUrls.length - displayLimit;
             const wrap = document.getElementById('showMoreWrap');
             if (remaining > 0) {
                 wrap.style.display = 'block';
@@ -1073,6 +1226,52 @@ const adminHtml = `<!DOCTYPE html>
                 showMessage('message', 'Network error', 'error');
                 renderList();
             }
+        }
+
+        function startTitleEdit(shortCode, currentTitle) {
+            const el = document.getElementById('title-' + shortCode);
+            const val = currentTitle || '';
+            el.innerHTML = '<div class="title-edit-inline">' +
+                '<input type="text" id="titleInput-' + shortCode + '" value="' + escapeAttr(val) + '" placeholder="Enter a title..." maxlength="200">' +
+                '<button class="save-edit-btn icon-btn" onclick="saveTitleEdit(\\'' + shortCode + '\\')">${icons.check}</button>' +
+                '<button class="cancel-edit-btn icon-btn" onclick="renderList()">${icons.x}</button>' +
+            '</div>';
+            const inp = document.getElementById('titleInput-' + shortCode);
+            inp.focus();
+            inp.select();
+            inp.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); saveTitleEdit(shortCode); }
+                if (e.key === 'Escape') { renderList(); }
+            });
+        }
+
+        async function saveTitleEdit(shortCode) {
+            const newTitle = document.getElementById('titleInput-' + shortCode).value.trim();
+            try {
+                const response = await fetch('/admin/update-title', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': authToken },
+                    body: JSON.stringify({ shortCode, title: newTitle })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    const item = allUrls.find(u => u.shortCode === shortCode);
+                    if (item) item.title = newTitle || null;
+                    showMessage('message', newTitle ? 'Title updated' : 'Title removed', 'success');
+                    applySearch();
+                } else {
+                    if (response.status === 401) { showMessage('message', 'Session expired.', 'error'); logout(); return; }
+                    showMessage('message', data.error || 'Failed to update title', 'error');
+                    renderList();
+                }
+            } catch (error) {
+                showMessage('message', 'Network error', 'error');
+                renderList();
+            }
+        }
+
+        function escapeAttr(str) {
+            return str.replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         }
 
         function formatTimeAgo(timestamp) {
@@ -1200,7 +1399,7 @@ function htmlResponse(html, status = 200) {
 }
 
 // ---------------------------------------------------------------------------
-// KV helpers – stores JSON {url, createdAt} with backward compat for plain strings
+// KV helpers – stores JSON {url, title, createdAt} with backward compat for plain strings
 // ---------------------------------------------------------------------------
 function parseUrlValue(raw) {
   if (!raw) return null;
@@ -1210,11 +1409,11 @@ function parseUrlValue(raw) {
   } catch (_) {
     // legacy plain-string value
   }
-  return { url: raw, createdAt: null };
+  return { url: raw, title: null, createdAt: null };
 }
 
-function serializeUrlValue(url) {
-  return JSON.stringify({ url, createdAt: Date.now() });
+function serializeUrlValue(url, title) {
+  return JSON.stringify({ url, title: title || null, createdAt: Date.now() });
 }
 
 // ---------------------------------------------------------------------------
@@ -1325,6 +1524,10 @@ async function handleAdmin(request, env, path) {
     return handleEditShortCode(request, env);
   }
 
+  if (path === '/admin/update-title' && request.method === 'POST') {
+    return handleUpdateTitle(request, env);
+  }
+
   return jsonResponse({ error: 'Not found' }, 404);
 }
 
@@ -1382,7 +1585,7 @@ async function handleGetStats(env, shortCode) {
 
 async function handleCreate(request, env) {
   try {
-    const { url, shortCode } = await request.json();
+    const { url, title, shortCode } = await request.json();
 
     if (!url) {
       return jsonResponse({ error: 'URL is required' }, 400);
@@ -1412,12 +1615,13 @@ async function handleCreate(request, env) {
       }
     }
 
-    await env.URLS.put(code, serializeUrlValue(url));
+    await env.URLS.put(code, serializeUrlValue(url, title));
 
     return jsonResponse({
       success: true,
       shortCode: code,
       url,
+      title: title || null,
       shortUrl: '/' + code,
     });
   } catch (error) {
@@ -1437,6 +1641,7 @@ async function handleList(env) {
           return {
             shortCode: key.name,
             url: parsed.url,
+            title: parsed.title || null,
             createdAt: parsed.createdAt,
           };
         })
@@ -1538,6 +1743,31 @@ async function handleEditShortCode(request, env) {
   }
 }
 
+async function handleUpdateTitle(request, env) {
+  try {
+    const { shortCode, title } = await request.json();
+
+    if (!shortCode) {
+      return jsonResponse({ error: 'shortCode is required' }, 400);
+    }
+
+    const raw = await env.URLS.get(shortCode);
+    if (!raw) {
+      return jsonResponse({ error: 'Short code not found' }, 404);
+    }
+
+    const parsed = parseUrlValue(raw);
+    parsed.title = title || null;
+    if (!parsed.createdAt) parsed.createdAt = Date.now();
+
+    await env.URLS.put(shortCode, JSON.stringify(parsed));
+
+    return jsonResponse({ success: true, shortCode, title: parsed.title });
+  } catch (error) {
+    return jsonResponse({ error: 'Invalid request' }, 400);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // API Handlers
 // ---------------------------------------------------------------------------
@@ -1561,7 +1791,7 @@ async function handleApiShorten(request, env) {
       }, 401);
     }
 
-    const { url, shortCode } = await request.json();
+    const { url, title, shortCode } = await request.json();
 
     if (!url) {
       return jsonResponse({ success: false, error: 'URL is required' }, 400);
@@ -1592,7 +1822,7 @@ async function handleApiShorten(request, env) {
       }
     }
 
-    await env.URLS.put(code, serializeUrlValue(url));
+    await env.URLS.put(code, serializeUrlValue(url, title));
 
     const requestUrl = new URL(request.url);
     const shortUrl = requestUrl.protocol + '//' + requestUrl.host + '/' + code;
@@ -1601,6 +1831,7 @@ async function handleApiShorten(request, env) {
       success: true,
       shortCode: code,
       url,
+      title: title || null,
       shortUrl,
     });
   } catch (error) {
