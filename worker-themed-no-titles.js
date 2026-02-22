@@ -439,23 +439,21 @@ const adminHtml = `<!DOCTYPE html>
         .url-header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 6px;
+            align-items: center;
+            margin-bottom: 4px;
         }
-
-        .url-info { flex: 1; min-width: 0; }
 
         .short-url-row {
             display: flex;
             align-items: center;
             gap: 6px;
-            margin-bottom: 4px;
         }
 
         .short-url {
             color: var(--color-accent);
             font-weight: 600;
             text-decoration: none;
+            font-size: 15px;
         }
 
         .short-url:hover { color: var(--color-accent-hover); }
@@ -464,8 +462,8 @@ const adminHtml = `<!DOCTYPE html>
             color: var(--color-text-muted);
             font-size: 13px;
             word-break: break-all;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            margin-top: 4px;
+            line-height: 1.5;
         }
 
         .url-meta {
@@ -767,10 +765,10 @@ const adminHtml = `<!DOCTYPE html>
         }
 
         .url-title {
-            font-weight: 600;
-            font-size: 14px;
+            font-weight: 500;
+            font-size: 13px;
             color: var(--color-text);
-            margin-bottom: 2px;
+            margin-top: 2px;
             display: flex;
             align-items: center;
             gap: 5px;
@@ -1106,20 +1104,18 @@ const adminHtml = `<!DOCTYPE html>
                     '<input type="checkbox" class="url-checkbox" data-code="' + item.shortCode + '" ' + checked + ' onchange="toggleSelect(\\'' + item.shortCode + '\\', this.checked)">' +
                     '<div class="url-item-content">' +
                         '<div class="url-header">' +
-                            '<div class="url-info">' +
-                                titleHtml +
-                                '<div class="short-url-row" id="row-' + item.shortCode + '">' +
-                                    '<a href="/' + item.shortCode + '" class="short-url" target="_blank">/' + item.shortCode + '</a>' +
-                                    '<button class="edit-btn icon-btn" onclick="startEdit(\\'' + item.shortCode + '\\')" title="Edit short code">${icons.edit}</button>' +
-                                '</div>' +
-                                '<div class="long-url">' + escapeHtml(item.url) + '</div>' +
-                                createdHtml +
+                            '<div class="short-url-row" id="row-' + item.shortCode + '">' +
+                                '<a href="/' + item.shortCode + '" class="short-url" target="_blank">/' + item.shortCode + '</a>' +
+                                '<button class="edit-btn icon-btn" onclick="startEdit(\\'' + item.shortCode + '\\')" title="Edit short code">${icons.edit}</button>' +
                             '</div>' +
                             '<div class="url-actions">' +
                                 '<button class="copy-btn icon-btn" onclick="copyUrl(\\'' + item.shortCode + '\\', this)">${icons.copy} Copy</button>' +
                                 '<button class="delete-btn icon-btn" onclick="deleteUrl(\\'' + item.shortCode + '\\')">${icons.trash}</button>' +
                             '</div>' +
                         '</div>' +
+                        titleHtml +
+                        '<div class="long-url">' + escapeHtml(item.url) + '</div>' +
+                        createdHtml +
                         statsHtml +
                     '</div>' +
                 '</div></div>';
