@@ -837,6 +837,73 @@ const adminHtml = `<!DOCTYPE html>
             background: rgba(231, 59, 66, 0.15);
             border-radius: 2px;
         }
+
+        .tag-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+        .tag-chip {
+            display: inline-flex; align-items: center; gap: 3px;
+            padding: 2px 8px; font-size: 11px; font-weight: 500;
+            border-radius: 12px;
+            background: var(--color-sidebar-bg); color: var(--color-text-muted);
+            border: 1px solid var(--color-border); cursor: pointer;
+        }
+        .tag-chip:hover { border-color: var(--color-accent); color: var(--color-accent); }
+        .tag-chip .tag-remove {
+            cursor: pointer; font-size: 13px; line-height: 1;
+            color: var(--color-text-light); margin-left: 2px;
+        }
+        .tag-chip .tag-remove:hover { color: var(--color-accent); }
+
+        .tag-filter-bar {
+            display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; align-items: center;
+        }
+        .tag-filter-chip {
+            display: inline-flex; align-items: center; gap: 3px;
+            padding: 3px 10px; font-size: 12px; font-weight: 500;
+            border-radius: 14px; cursor: pointer; border: 1px solid var(--color-border);
+            background: var(--color-bg); color: var(--color-text-muted); transition: all 0.15s;
+        }
+        .tag-filter-chip:hover { border-color: var(--color-accent); color: var(--color-accent); }
+        .tag-filter-chip.active { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+        .tag-filter-label { font-size: 12px; color: var(--color-text-light); margin-right: 4px; }
+
+        .tag-input-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .tag-input-row input { flex: 1; min-width: 120px; }
+        .tag-input-inline {
+            display: flex; align-items: center; gap: 4px; margin-top: 4px;
+        }
+        .tag-input-inline input {
+            flex: 1; padding: 3px 8px; font-size: 12px;
+            border: 2px solid var(--color-accent); border-radius: 4px;
+            background: var(--color-bg); color: var(--color-text);
+        }
+        .tag-input-inline button { width: auto; padding: 3px 8px; font-size: 11px; }
+
+        .tools-bar {
+            display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+        }
+        .tool-btn {
+            padding: 6px 14px; font-size: 12px; font-weight: 500;
+            background: var(--color-bg); color: var(--color-accent);
+            border: 1px solid var(--color-border); border-radius: 6px;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+            width: auto;
+        }
+        .tool-btn:hover { background: var(--color-sidebar-bg); transform: none; }
+
+        .upload-area {
+            display: none; margin-top: 10px; padding: 15px;
+            border: 2px dashed var(--color-border); border-radius: 8px;
+            background: var(--color-sidebar-bg); text-align: center;
+        }
+        .upload-area.visible { display: block; }
+        .upload-area p { font-size: 13px; color: var(--color-text-muted); margin-bottom: 10px; }
+        .upload-area input[type="file"] { display: none; }
+        .upload-area label {
+            display: inline-block; padding: 8px 20px; background: var(--color-accent);
+            color: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;
+        }
+        .upload-area label:hover { background: var(--color-accent-hover); }
+        .upload-progress { margin-top: 10px; font-size: 13px; color: var(--color-text-muted); }
     </style>
 </head>
 <body>
@@ -883,14 +950,30 @@ const adminHtml = `<!DOCTYPE html>
                     <label for="shortCode">Custom Short Code (optional)</label>
                     <input type="text" id="shortCode" placeholder="Leave blank for random code">
                 </div>
+                <div class="form-group">
+                    <label for="tags">Tags (optional, comma-separated)</label>
+                    <input type="text" id="tags" placeholder="e.g. marketing, social, blog">
+                </div>
                 <button type="submit">Create Short URL</button>
             </form>
+
+            <div class="tools-bar">
+                <button class="tool-btn" onclick="exportCsv()">${icons.share} Download CSV</button>
+                <button class="tool-btn" onclick="toggleUpload()">${icons.link} Bulk Upload</button>
+            </div>
+            <div id="uploadArea" class="upload-area">
+                <p>Upload a CSV file with one URL per line, or columns: url, title, tags</p>
+                <label for="csvFile">Choose CSV File</label>
+                <input type="file" id="csvFile" accept=".csv,.txt" onchange="handleCsvUpload(this.files[0])">
+                <div id="uploadProgress" class="upload-progress"></div>
+            </div>
 
             <div class="url-list">
                 <div class="search-bar">
                     <span class="search-icon">${icons.search}</span>
-                    <input type="text" id="searchInput" placeholder="Search titles and URLs..." oninput="applySearch()">
+                    <input type="text" id="searchInput" placeholder="Search titles, URLs, tags..." oninput="applySearch()">
                 </div>
+                <div id="tagFilterBar" class="tag-filter-bar" style="display:none;"></div>
                 <div class="list-header">
                     <h2>Your Short URLs</h2>
                     <label class="select-all-label"><input type="checkbox" id="selectAll" class="url-checkbox"> Select all</label>
@@ -918,6 +1001,7 @@ const adminHtml = `<!DOCTYPE html>
         let allUrls = [];
         let filteredUrls = [];
         let searchQuery = '';
+        let selectedTag = '';
         let displayLimit = 50;
         const PAGE_SIZE = 50;
         const selectedCodes = new Set();
@@ -925,6 +1009,8 @@ const adminHtml = `<!DOCTYPE html>
         const savedToken = localStorage.getItem('adminToken');
         if (savedToken) {
             authToken = savedToken;
+            document.getElementById('authSection').classList.remove('active');
+            document.getElementById('adminSection').classList.add('active');
             loadUrls();
         }
 
@@ -960,11 +1046,13 @@ const adminHtml = `<!DOCTYPE html>
             const longUrl = document.getElementById('longUrl').value;
             const title = document.getElementById('title').value.trim() || undefined;
             const shortCode = document.getElementById('shortCode').value || undefined;
+            const tagsRaw = document.getElementById('tags').value;
+            const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
             try {
                 const response = await fetch('/admin/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': authToken },
-                    body: JSON.stringify({ url: longUrl, title, shortCode })
+                    body: JSON.stringify({ url: longUrl, title, shortCode, tags })
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -1042,19 +1130,54 @@ const adminHtml = `<!DOCTYPE html>
 
         function applySearch() {
             searchQuery = (document.getElementById('searchInput') ? document.getElementById('searchInput').value : '').toLowerCase().trim();
-            if (!searchQuery) {
-                filteredUrls = allUrls;
-            } else {
-                filteredUrls = allUrls.filter(item => {
+            filteredUrls = allUrls;
+
+            if (selectedTag) {
+                filteredUrls = filteredUrls.filter(item =>
+                    (item.tags || []).some(t => t.toLowerCase() === selectedTag.toLowerCase())
+                );
+            }
+
+            if (searchQuery) {
+                filteredUrls = filteredUrls.filter(item => {
                     const t = (item.title || '').toLowerCase();
                     const u = (item.url || '').toLowerCase();
                     const sc = (item.shortCode || '').toLowerCase();
-                    return t.includes(searchQuery) || u.includes(searchQuery) || sc.includes(searchQuery);
+                    const tags = (item.tags || []).join(' ').toLowerCase();
+                    return t.includes(searchQuery) || u.includes(searchQuery) || sc.includes(searchQuery) || tags.includes(searchQuery);
                 });
             }
+
             displayLimit = PAGE_SIZE;
             renderList();
             updateBulkBar();
+            renderTagFilter();
+        }
+
+        function renderTagFilter() {
+            const allTags = {};
+            allUrls.forEach(item => {
+                (item.tags || []).forEach(t => {
+                    const key = t.toLowerCase();
+                    if (!allTags[key]) allTags[key] = { name: t, count: 0 };
+                    allTags[key].count++;
+                });
+            });
+            const bar = document.getElementById('tagFilterBar');
+            const sorted = Object.values(allTags).sort((a, b) => b.count - a.count);
+            if (sorted.length === 0) { bar.style.display = 'none'; return; }
+            bar.style.display = 'flex';
+            bar.innerHTML = '<span class="tag-filter-label">${icons.tag} Filter:</span>' +
+                '<span class="tag-filter-chip' + (!selectedTag ? ' active' : '') + '" onclick="filterByTag(\\'\\')">${icons.tag} All</span>' +
+                sorted.map(t =>
+                    '<span class="tag-filter-chip' + (selectedTag && selectedTag.toLowerCase() === t.name.toLowerCase() ? ' active' : '') +
+                    '" onclick="filterByTag(\\'' + escapeAttr(t.name) + '\\')">' + escapeHtml(t.name) + ' (' + t.count + ')</span>'
+                ).join('');
+        }
+
+        function filterByTag(tag) {
+            selectedTag = tag;
+            applySearch();
         }
 
         function renderList() {
@@ -1065,8 +1188,8 @@ const adminHtml = `<!DOCTYPE html>
                 return;
             }
 
-            if (filteredUrls.length === 0 && searchQuery) {
-                urlsList.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 20px;">No URLs match your search.</p>';
+            if (filteredUrls.length === 0 && (searchQuery || selectedTag)) {
+                urlsList.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 20px;">No URLs match your filter.</p>';
                 document.getElementById('showMoreWrap').style.display = 'none';
                 return;
             }
@@ -1104,6 +1227,12 @@ const adminHtml = `<!DOCTYPE html>
                     ' <button class="title-edit-btn" onclick="startTitleEdit(\\'' + item.shortCode + '\\', ' + (item.title ? '\\'' + escapeAttr(item.title) + '\\'' : 'null') + ')" title="Edit title">${icons.edit}</button>' +
                     '</div>';
 
+                const itemTags = item.tags || [];
+                const tagsHtml = '<div class="tag-chips" id="tags-' + item.shortCode + '">' +
+                    itemTags.map(t => '<span class="tag-chip" onclick="filterByTag(\\'' + escapeAttr(t) + '\\')">' + escapeHtml(t) + '</span>').join('') +
+                    ' <span class="tag-chip" onclick="startTagEdit(\\'' + item.shortCode + '\\')" title="Edit tags" style="border-style:dashed;">${icons.edit} tags</span>' +
+                    '</div>';
+
                 return '<div class="url-item"><div class="url-item-row">' +
                     '<input type="checkbox" class="url-checkbox" data-code="' + item.shortCode + '" ' + checked + ' onchange="toggleSelect(\\'' + item.shortCode + '\\', this.checked)">' +
                     '<div class="url-item-content">' +
@@ -1115,6 +1244,7 @@ const adminHtml = `<!DOCTYPE html>
                             '<button class="copy-btn icon-btn" onclick="copyUrl(\\'' + item.shortCode + '\\', this)">${icons.copy} Copy</button>' +
                         '</div>' +
                         titleHtml +
+                        tagsHtml +
                         '<div class="long-url">' + escapeHtml(item.url) + '</div>' +
                         createdHtml +
                         statsHtml +
@@ -1351,6 +1481,134 @@ const adminHtml = `<!DOCTYPE html>
             messageEl.className = 'message ' + type;
             setTimeout(() => { messageEl.className = 'message'; }, 5000);
         }
+
+        function startTagEdit(shortCode) {
+            const el = document.getElementById('tags-' + shortCode);
+            const item = allUrls.find(u => u.shortCode === shortCode);
+            const currentTags = (item && item.tags) ? item.tags.join(', ') : '';
+            el.innerHTML = '<div class="tag-input-inline">' +
+                '<input type="text" id="tagInput-' + shortCode + '" value="' + escapeAttr(currentTags) + '" placeholder="tag1, tag2, ...">' +
+                '<button class="save-edit-btn icon-btn" onclick="saveTagEdit(\\'' + shortCode + '\\')">${icons.check}</button>' +
+                '<button class="cancel-edit-btn icon-btn" onclick="renderList()">${icons.x}</button>' +
+            '</div>';
+            const inp = document.getElementById('tagInput-' + shortCode);
+            inp.focus();
+            inp.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); saveTagEdit(shortCode); }
+                if (e.key === 'Escape') { renderList(); }
+            });
+        }
+
+        async function saveTagEdit(shortCode) {
+            const raw = document.getElementById('tagInput-' + shortCode).value;
+            const tags = raw ? raw.split(',').map(t => t.trim()).filter(Boolean) : [];
+            try {
+                const response = await fetch('/admin/update-tags', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': authToken },
+                    body: JSON.stringify({ shortCode, tags })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    const item = allUrls.find(u => u.shortCode === shortCode);
+                    if (item) item.tags = tags;
+                    showMessage('message', 'Tags updated', 'success');
+                    applySearch();
+                } else {
+                    if (response.status === 401) { showMessage('message', 'Session expired.', 'error'); logout(); return; }
+                    showMessage('message', data.error || 'Failed to update tags', 'error');
+                    renderList();
+                }
+            } catch (error) {
+                showMessage('message', 'Network error', 'error');
+                renderList();
+            }
+        }
+
+        function exportCsv() {
+            window.location.href = '/admin/export?auth=' + encodeURIComponent(authToken);
+        }
+
+        function toggleUpload() {
+            const area = document.getElementById('uploadArea');
+            area.classList.toggle('visible');
+            if (!area.classList.contains('visible')) {
+                document.getElementById('uploadProgress').textContent = '';
+                document.getElementById('csvFile').value = '';
+            }
+        }
+
+        async function handleCsvUpload(file) {
+            if (!file) return;
+            const progress = document.getElementById('uploadProgress');
+            progress.textContent = 'Reading file...';
+
+            try {
+                const text = await file.text();
+                const lines = text.split(/\\r?\\n/).filter(l => l.trim());
+                if (lines.length === 0) { progress.textContent = 'File is empty.'; return; }
+
+                // Detect header
+                const firstLine = lines[0].toLowerCase();
+                const hasHeader = firstLine.includes('url') || firstLine.includes('http') === false;
+                const dataLines = hasHeader ? lines.slice(1) : lines;
+
+                const urls = dataLines.map(line => {
+                    const parts = parseCSVLine(line);
+                    if (parts.length === 1) return { url: parts[0].trim() };
+                    return {
+                        url: parts[0].trim(),
+                        title: parts[1] ? parts[1].trim() : null,
+                        tags: parts[2] ? parts[2].split(';').map(t => t.trim()).filter(Boolean) : [],
+                    };
+                }).filter(u => u.url);
+
+                if (urls.length === 0) { progress.textContent = 'No valid URLs found.'; return; }
+
+                progress.textContent = 'Uploading ' + urls.length + ' URL(s)...';
+
+                const response = await fetch('/admin/bulk-create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': authToken },
+                    body: JSON.stringify({ urls })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const created = data.results.filter(r => r.shortCode).length;
+                    const failed = data.results.filter(r => r.error).length;
+                    progress.textContent = created + ' URL(s) created' + (failed ? ', ' + failed + ' failed' : '') + '.';
+                    document.getElementById('csvFile').value = '';
+                    loadUrls();
+                } else {
+                    if (response.status === 401) { showMessage('message', 'Session expired.', 'error'); logout(); return; }
+                    const data = await response.json();
+                    progress.textContent = data.error || 'Upload failed.';
+                }
+            } catch (error) {
+                progress.textContent = 'Error reading file.';
+            }
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (inQuotes) {
+                    if (ch === '"' && line[i + 1] === '"') { current += '"'; i++; }
+                    else if (ch === '"') { inQuotes = false; }
+                    else { current += ch; }
+                } else {
+                    if (ch === '"') { inQuotes = true; }
+                    else if (ch === ',') { result.push(current); current = ''; }
+                    else { current += ch; }
+                }
+            }
+            result.push(current);
+            return result;
+        }
     </script>
 </body>
 </html>`;
@@ -1416,11 +1674,11 @@ function parseUrlValue(raw) {
   } catch (_) {
     // legacy plain-string value
   }
-  return { url: raw, title: null, createdAt: null };
+  return { url: raw, title: null, tags: [], createdAt: null };
 }
 
-function serializeUrlValue(url, title) {
-  return JSON.stringify({ url, title: title || null, createdAt: Date.now() });
+function serializeUrlValue(url, title, tags) {
+  return JSON.stringify({ url, title: title || null, tags: tags || [], createdAt: Date.now() });
 }
 
 // ---------------------------------------------------------------------------
@@ -1500,6 +1758,16 @@ async function handleAdmin(request, env, path) {
     return handleLogin(request, env);
   }
 
+  // Export uses query param auth since it's a direct navigation (no headers)
+  if (path === '/admin/export' && request.method === 'GET') {
+    const exportUrl = new URL(request.url);
+    const queryAuth = exportUrl.searchParams.get('auth');
+    if (queryAuth && verifyAuth(queryAuth, env)) {
+      return handleExport(env);
+    }
+    return jsonResponse({ error: 'Unauthorized' }, 401);
+  }
+
   const authToken = request.headers.get('Authorization');
   if (!verifyAuth(authToken, env)) {
     return jsonResponse({ error: 'Unauthorized' }, 401);
@@ -1533,6 +1801,14 @@ async function handleAdmin(request, env, path) {
 
   if (path === '/admin/update-title' && request.method === 'POST') {
     return handleUpdateTitle(request, env);
+  }
+
+  if (path === '/admin/update-tags' && request.method === 'POST') {
+    return handleUpdateTags(request, env);
+  }
+
+  if (path === '/admin/bulk-create' && request.method === 'POST') {
+    return handleBulkCreate(request, env);
   }
 
   return jsonResponse({ error: 'Not found' }, 404);
@@ -1593,7 +1869,7 @@ async function handleGetStats(env, shortCode) {
 
 async function handleCreate(request, env) {
   try {
-    const { url, title, shortCode } = await request.json();
+    const { url, title, shortCode, tags } = await request.json();
 
     if (!url) {
       return jsonResponse({ error: 'URL is required' }, 400);
@@ -1602,6 +1878,8 @@ async function handleCreate(request, env) {
     if (!isValidUrl(url)) {
       return jsonResponse({ error: 'Invalid URL format. URL must start with http:// or https://' }, 400);
     }
+
+    const cleanTags = Array.isArray(tags) ? tags.map(t => t.trim()).filter(Boolean) : [];
 
     let code = shortCode;
     if (code) {
@@ -1623,13 +1901,14 @@ async function handleCreate(request, env) {
       }
     }
 
-    await env.URLS.put(code, serializeUrlValue(url, title));
+    await env.URLS.put(code, serializeUrlValue(url, title, cleanTags));
 
     return jsonResponse({
       success: true,
       shortCode: code,
       url,
       title: title || null,
+      tags: cleanTags,
       shortUrl: '/' + code,
     });
   } catch (error) {
@@ -1650,6 +1929,7 @@ async function handleList(env) {
             shortCode: key.name,
             url: parsed.url,
             title: parsed.title || null,
+            tags: parsed.tags || [],
             createdAt: parsed.createdAt,
           };
         })
@@ -1771,6 +2051,108 @@ async function handleUpdateTitle(request, env) {
     await env.URLS.put(shortCode, JSON.stringify(parsed));
 
     return jsonResponse({ success: true, shortCode, title: parsed.title });
+  } catch (error) {
+    return jsonResponse({ error: 'Invalid request' }, 400);
+  }
+}
+
+async function handleUpdateTags(request, env) {
+  try {
+    const { shortCode, tags } = await request.json();
+
+    if (!shortCode) {
+      return jsonResponse({ error: 'shortCode is required' }, 400);
+    }
+
+    const raw = await env.URLS.get(shortCode);
+    if (!raw) {
+      return jsonResponse({ error: 'Short code not found' }, 404);
+    }
+
+    const parsed = parseUrlValue(raw);
+    parsed.tags = Array.isArray(tags) ? tags.map(t => t.trim()).filter(Boolean) : [];
+    if (!parsed.createdAt) parsed.createdAt = Date.now();
+
+    await env.URLS.put(shortCode, JSON.stringify(parsed));
+
+    return jsonResponse({ success: true, shortCode, tags: parsed.tags });
+  } catch (error) {
+    return jsonResponse({ error: 'Invalid request' }, 400);
+  }
+}
+
+async function handleExport(env) {
+  try {
+    const list = await env.URLS.list();
+    const urls = await Promise.all(
+      list.keys
+        .filter(key => !key.name.startsWith('stats:'))
+        .map(async (key) => {
+          const raw = await env.URLS.get(key.name);
+          const parsed = parseUrlValue(raw);
+          return {
+            shortCode: key.name,
+            url: parsed.url,
+            title: parsed.title || '',
+            tags: (parsed.tags || []).join(';'),
+            createdAt: parsed.createdAt ? new Date(parsed.createdAt).toISOString() : '',
+          };
+        })
+    );
+
+    const header = 'shortCode,url,title,tags,createdAt';
+    const rows = urls.map(u => {
+      const esc = (v) => '"' + String(v).replace(/"/g, '""') + '"';
+      return [esc(u.shortCode), esc(u.url), esc(u.title), esc(u.tags), esc(u.createdAt)].join(',');
+    });
+    const csv = header + '\n' + rows.join('\n');
+
+    return new Response(csv, {
+      headers: {
+        'Content-Type': 'text/csv',
+        'Content-Disposition': 'attachment; filename="urls-export.csv"',
+      },
+    });
+  } catch (error) {
+    return jsonResponse({ error: 'Failed to export URLs' }, 500);
+  }
+}
+
+async function handleBulkCreate(request, env) {
+  try {
+    const { urls } = await request.json();
+
+    if (!Array.isArray(urls) || urls.length === 0) {
+      return jsonResponse({ error: 'urls array is required' }, 400);
+    }
+
+    if (urls.length > 500) {
+      return jsonResponse({ error: 'Maximum 500 URLs per batch' }, 400);
+    }
+
+    const results = [];
+    for (const entry of urls) {
+      const longUrl = typeof entry === 'string' ? entry : entry.url;
+      const title = typeof entry === 'object' ? (entry.title || null) : null;
+      const tags = typeof entry === 'object' && Array.isArray(entry.tags) ? entry.tags : [];
+
+      if (!longUrl || !isValidUrl(longUrl)) {
+        results.push({ url: longUrl || '', error: 'Invalid URL' });
+        continue;
+      }
+
+      let code = generateShortCode();
+      let attempts = 0;
+      while (await env.URLS.get(code) && attempts < 10) {
+        code = generateShortCode();
+        attempts++;
+      }
+
+      await env.URLS.put(code, serializeUrlValue(longUrl, title, tags));
+      results.push({ shortCode: code, url: longUrl, title, tags });
+    }
+
+    return jsonResponse({ success: true, results });
   } catch (error) {
     return jsonResponse({ error: 'Invalid request' }, 400);
   }
