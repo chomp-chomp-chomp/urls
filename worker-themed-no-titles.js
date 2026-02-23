@@ -1047,7 +1047,7 @@ const adminHtml = `<!DOCTYPE html>
             const title = document.getElementById('title').value.trim() || undefined;
             const shortCode = document.getElementById('shortCode').value || undefined;
             const tagsRaw = document.getElementById('tags').value;
-            const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+            const tags = tagsRaw ? [...new Set(tagsRaw.split(',').map(t => t.trim().toLowerCase()).filter(Boolean))] : [];
             try {
                 const response = await fetch('/admin/create', {
                     method: 'POST',
@@ -1501,7 +1501,7 @@ const adminHtml = `<!DOCTYPE html>
 
         async function saveTagEdit(shortCode) {
             const raw = document.getElementById('tagInput-' + shortCode).value;
-            const tags = raw ? raw.split(',').map(t => t.trim()).filter(Boolean) : [];
+            const tags = raw ? [...new Set(raw.split(',').map(t => t.trim().toLowerCase()).filter(Boolean))] : [];
             try {
                 const response = await fetch('/admin/update-tags', {
                     method: 'POST',
@@ -1525,8 +1525,25 @@ const adminHtml = `<!DOCTYPE html>
             }
         }
 
-        function exportCsv() {
-            window.location.href = '/admin/export?auth=' + encodeURIComponent(authToken);
+        async function exportCsv() {
+            try {
+                const response = await fetch('/admin/export', {
+                    headers: { 'Authorization': authToken }
+                });
+                if (!response.ok) {
+                    if (response.status === 401) { showMessage('message', 'Session expired.', 'error'); logout(); return; }
+                    showMessage('message', 'Export failed', 'error'); return;
+                }
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = 'urls-export.csv';
+                document.body.appendChild(a); a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                showMessage('message', 'Export failed', 'error');
+            }
         }
 
         function toggleUpload() {
@@ -1548,9 +1565,9 @@ const adminHtml = `<!DOCTYPE html>
                 const lines = text.split(/\\r?\\n/).filter(l => l.trim());
                 if (lines.length === 0) { progress.textContent = 'File is empty.'; return; }
 
-                // Detect header
-                const firstLine = lines[0].toLowerCase();
-                const hasHeader = firstLine.includes('url') || firstLine.includes('http') === false;
+                // Detect header row (starts with common column names, not a URL)
+                const firstLine = lines[0].trim();
+                const hasHeader = /^(url|shortcode|title|tags|link)\\b/i.test(firstLine) || (/^"?(url|shortcode|title|tags|link)/i.test(firstLine));
                 const dataLines = hasHeader ? lines.slice(1) : lines;
 
                 const urls = dataLines.map(line => {
@@ -1681,6 +1698,14 @@ function serializeUrlValue(url, title, tags) {
   return JSON.stringify({ url, title: title || null, tags: tags || [], createdAt: Date.now() });
 }
 
+function sanitizeTags(tags) {
+  if (!Array.isArray(tags)) return [];
+  const cleaned = [...new Set(tags.map(t => t.trim().toLowerCase()).filter(Boolean))];
+  if (cleaned.length > 10) return null;
+  if (cleaned.some(t => t.length > 50)) return null;
+  return cleaned;
+}
+
 // ---------------------------------------------------------------------------
 // Click Tracking Functions
 // ---------------------------------------------------------------------------
@@ -1758,16 +1783,6 @@ async function handleAdmin(request, env, path) {
     return handleLogin(request, env);
   }
 
-  // Export uses query param auth since it's a direct navigation (no headers)
-  if (path === '/admin/export' && request.method === 'GET') {
-    const exportUrl = new URL(request.url);
-    const queryAuth = exportUrl.searchParams.get('auth');
-    if (queryAuth && verifyAuth(queryAuth, env)) {
-      return handleExport(env);
-    }
-    return jsonResponse({ error: 'Unauthorized' }, 401);
-  }
-
   const authToken = request.headers.get('Authorization');
   if (!verifyAuth(authToken, env)) {
     return jsonResponse({ error: 'Unauthorized' }, 401);
@@ -1775,6 +1790,10 @@ async function handleAdmin(request, env, path) {
 
   if (path === '/admin/create' && request.method === 'POST') {
     return handleCreate(request, env);
+  }
+
+  if (path === '/admin/export' && request.method === 'GET') {
+    return handleExport(env);
   }
 
   if (path === '/admin/list' && request.method === 'GET') {
@@ -1879,7 +1898,10 @@ async function handleCreate(request, env) {
       return jsonResponse({ error: 'Invalid URL format. URL must start with http:// or https://' }, 400);
     }
 
-    const cleanTags = Array.isArray(tags) ? tags.map(t => t.trim()).filter(Boolean) : [];
+    const cleanTags = sanitizeTags(tags);
+    if (cleanTags === null) {
+      return jsonResponse({ error: 'Too many tags (max 10) or tag too long (max 50 chars)' }, 400);
+    }
 
     let code = shortCode;
     if (code) {
@@ -2070,7 +2092,11 @@ async function handleUpdateTags(request, env) {
     }
 
     const parsed = parseUrlValue(raw);
-    parsed.tags = Array.isArray(tags) ? tags.map(t => t.trim()).filter(Boolean) : [];
+    const cleanTags = sanitizeTags(tags);
+    if (cleanTags === null) {
+      return jsonResponse({ error: 'Too many tags (max 10) or tag too long (max 50 chars)' }, 400);
+    }
+    parsed.tags = cleanTags;
     if (!parsed.createdAt) parsed.createdAt = Date.now();
 
     await env.URLS.put(shortCode, JSON.stringify(parsed));
@@ -2134,10 +2160,16 @@ async function handleBulkCreate(request, env) {
     for (const entry of urls) {
       const longUrl = typeof entry === 'string' ? entry : entry.url;
       const title = typeof entry === 'object' ? (entry.title || null) : null;
-      const tags = typeof entry === 'object' && Array.isArray(entry.tags) ? entry.tags : [];
+      const rawTags = typeof entry === 'object' && Array.isArray(entry.tags) ? entry.tags : [];
+      const cleanTags = sanitizeTags(rawTags);
 
       if (!longUrl || !isValidUrl(longUrl)) {
         results.push({ url: longUrl || '', error: 'Invalid URL' });
+        continue;
+      }
+
+      if (cleanTags === null) {
+        results.push({ url: longUrl, error: 'Too many tags or tag too long' });
         continue;
       }
 
@@ -2148,8 +2180,13 @@ async function handleBulkCreate(request, env) {
         attempts++;
       }
 
-      await env.URLS.put(code, serializeUrlValue(longUrl, title, tags));
-      results.push({ shortCode: code, url: longUrl, title, tags });
+      if (await env.URLS.get(code)) {
+        results.push({ url: longUrl, error: 'Failed to generate unique short code' });
+        continue;
+      }
+
+      await env.URLS.put(code, serializeUrlValue(longUrl, title, cleanTags));
+      results.push({ shortCode: code, url: longUrl, title, tags: cleanTags });
     }
 
     return jsonResponse({ success: true, results });
