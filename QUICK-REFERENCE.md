@@ -6,9 +6,9 @@ Everything you need to know about your URL shortener at a glance!
 
 ## 🎯 Quick Links
 
-- **Admin Panel:** https://chom.pm/admin
-- **Your Domain:** https://chom.pm
-- **API Endpoint:** https://chom.pm/api/shorten
+- **Admin Panel:** https://chmp.me/admin
+- **Your Domain:** https://chmp.me
+- **API Endpoint:** https://chmp.me/api/shorten
 
 ---
 
@@ -56,7 +56,7 @@ See overview at the top:
 2. Enter long URL
 3. Enter custom code (e.g., "newsletter")
 4. Click "Create Short URL"
-5. Get: https://chom.pm/newsletter
+5. Get: https://chmp.me/newsletter
 
 ### Copy an Existing URL
 1. Find the URL in your list
@@ -99,7 +99,7 @@ See overview at the top:
 
 ### Basic Request:
 ```bash
-curl -X POST https://chom.pm/api/shorten \
+curl -X POST https://chmp.me/api/shorten \
   -H "X-API-Key: YOUR-API-KEY" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com/long/url"}'
@@ -107,7 +107,7 @@ curl -X POST https://chom.pm/api/shorten \
 
 ### With Custom Code:
 ```bash
-curl -X POST https://chom.pm/api/shorten \
+curl -X POST https://chmp.me/api/shorten \
   -H "X-API-Key: YOUR-API-KEY" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com", "shortCode": "custom"}'
@@ -119,7 +119,7 @@ curl -X POST https://chom.pm/api/shorten \
   "success": true,
   "shortCode": "abc123",
   "url": "https://example.com/long/url",
-  "shortUrl": "https://chom.pm/abc123"
+  "shortUrl": "https://chmp.me/abc123"
 }
 ```
 
@@ -175,7 +175,7 @@ Country code of most clicks:
 
 ### Worker URL
 **Format:** https://chomp-urls.your-account.workers.dev
-**Custom Domain:** https://chom.pm
+**Custom Domain:** https://chmp.me
 
 ---
 
@@ -245,7 +245,7 @@ Create unique codes for each campaign:
 
 ### Quick Access
 Bookmark these pages:
-- Admin panel: https://chom.pm/admin
+- Admin panel: https://chmp.me/admin
 - Cloudflare dashboard: https://dash.cloudflare.com
 
 ### Security

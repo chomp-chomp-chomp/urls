@@ -122,7 +122,7 @@ Login with the admin password you set in Step 3.
 
 ---
 
-## Step 7: Add Custom Domain (chom.pm)
+## Step 7: Add Custom Domain (chmp.me)
 
 ### Option A: Via Dashboard (Easiest)
 
@@ -132,7 +132,7 @@ Login with the admin password you set in Step 3.
 4. Click the **Settings** tab
 5. Click **Domains & Routes**
 6. Click **Add Custom Domain**
-7. Enter: `chom.pm`
+7. Enter: `chmp.me`
 8. Click **Add Custom Domain**
 
 Cloudflare will automatically:
@@ -140,7 +140,7 @@ Cloudflare will automatically:
 - Set up SSL certificate
 - Route traffic to your worker
 
-**Done! Your URL shortener will be live at `https://chom.pm`**
+**Done! Your URL shortener will be live at `https://chmp.me`**
 
 ### Option B: Via Wrangler (Alternative)
 
@@ -148,7 +148,7 @@ Add this to your `wrangler.toml`:
 
 ```toml
 routes = [
-  { pattern = "chom.pm/*", zone_name = "chom.pm" }
+  { pattern = "chmp.me/*", zone_name = "chmp.me" }
 ]
 ```
 
@@ -167,22 +167,22 @@ npm run deploy
 - [ ] API_KEY secret set
 - [ ] Worker deployed successfully
 - [ ] Worker URL works (test /admin)
-- [ ] Custom domain (chom.pm) added
-- [ ] Can access https://chom.pm/admin
+- [ ] Custom domain (chmp.me) added
+- [ ] Can access https://chmp.me/admin
 - [ ] Can create a test short URL
 
 ---
 
 ## What to Do After Deployment
 
-1. **Test the admin panel:** https://chom.pm/admin
+1. **Test the admin panel:** https://chmp.me/admin
 2. **Create your first short URL**
 3. **Test the redirect**
 4. **Save your API key** somewhere safe
 5. **Test the API:**
 
 ```bash
-curl -X POST https://chom.pm/api/shorten \
+curl -X POST https://chmp.me/api/shorten \
   -H "X-API-Key: YOUR-API-KEY-FROM-STEP-4" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://google.com", "shortCode": "test"}'
@@ -204,9 +204,9 @@ curl -X POST https://chom.pm/api/shorten \
 - Try clearing browser cache/localStorage
 
 ### "Custom domain not working"
-- Make sure chom.pm nameservers are set to Cloudflare
+- Make sure chmp.me nameservers are set to Cloudflare
 - DNS propagation can take up to 24 hours
-- Check DNS status: https://www.whatsmydns.net/#NS/chom.pm
+- Check DNS status: https://www.whatsmydns.net/#NS/chmp.me
 
 ---
 

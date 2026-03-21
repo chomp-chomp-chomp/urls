@@ -68,7 +68,7 @@ To get these new features, you need to update the worker code:
 6. Click **Save and Deploy**
 
 ### Step 3: Done!
-Refresh your admin panel at https://chom.pm/admin and enjoy the new features!
+Refresh your admin panel at https://chmp.me/admin and enjoy the new features!
 
 ---
 
@@ -93,7 +93,7 @@ Full API documentation with examples:
 ## 🎯 Quick Examples
 
 ### Using Auto-Copy
-1. Go to https://chom.pm/admin
+1. Go to https://chmp.me/admin
 2. Enter a long URL
 3. Click "Create Short URL"
 4. **Done!** The short URL is already in your clipboard
@@ -114,7 +114,7 @@ Full API documentation with examples:
 
 ### Using the API
 ```bash
-curl -X POST https://chom.pm/api/shorten \
+curl -X POST https://chmp.me/api/shorten \
   -H "X-API-Key: YOUR-API-KEY" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com/long/url"}'

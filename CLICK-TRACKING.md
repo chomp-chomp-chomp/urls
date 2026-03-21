@@ -55,7 +55,7 @@ Example Page - My Website
 7. Click **Save and Deploy**
 
 ### Step 2: That's It!
-- Refresh your admin panel at https://chom.pm/admin
+- Refresh your admin panel at https://chmp.me/admin
 - Stats will start accumulating immediately
 - Previous clicks before update won't be counted (starts from 0)
 
@@ -268,10 +268,10 @@ Currently stats are only visible in the admin panel. API access is not implement
 ### Test the Tracking:
 ```bash
 # Test from command line (counts as "Direct")
-curl -L https://chom.pm/your-code
+curl -L https://chmp.me/your-code
 
 # Test with referrer
-curl -L -H "Referer: https://twitter.com" https://chom.pm/your-code
+curl -L -H "Referer: https://twitter.com" https://chmp.me/your-code
 
 # Check stats in admin panel
 ```

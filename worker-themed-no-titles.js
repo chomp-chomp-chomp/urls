@@ -44,7 +44,10 @@ const guideHtml = `<!DOCTYPE html>
     <title>Setup Guide - URL Shortener</title>
     <link rel="icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon.ico">
     <link rel="apple-touch-icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#e73b42">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="chmp.me">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
@@ -157,7 +160,7 @@ const guideHtml = `<!DOCTYPE html>
             <h3>Build the Shortcut</h3>
             <div class="step"><span class="step-number">1</span><p>Open the <strong>Shortcuts</strong> app and tap <strong>+</strong>. Name it <strong>Shorten URL</strong>.</p></div>
             <div class="step"><span class="step-number">2</span><p>Add <strong>Receive What's Shared</strong>. Set accepted types to <em>URLs</em> and <em>Safari Web Pages</em>.</p></div>
-            <div class="step"><span class="step-number">3</span><p>Add <strong>Get Contents of URL</strong>. Set URL to <code>https://chom.pm/api/shorten</code>, Method to <code>POST</code>, Request Body to <code>JSON</code>. Add key <code>url</code> with value <em>Shortcut Input</em>. Add headers: <code>Content-Type</code> = <code>application/json</code> and <code>X-API-Key</code> = your API key.</p></div>
+            <div class="step"><span class="step-number">3</span><p>Add <strong>Get Contents of URL</strong>. Set URL to <code>https://chmp.me/api/shorten</code>, Method to <code>POST</code>, Request Body to <code>JSON</code>. Add key <code>url</code> with value <em>Shortcut Input</em>. Add headers: <code>Content-Type</code> = <code>application/json</code> and <code>X-API-Key</code> = your API key.</p></div>
             <div class="step"><span class="step-number">4</span><p>Add <strong>Get Dictionary Value</strong>. Key: <code>shortUrl</code>, Dictionary: <em>Contents of URL</em>.</p></div>
             <div class="step"><span class="step-number">5</span><p>Add <strong>Copy to Clipboard</strong> with input set to <em>Dictionary Value</em>.</p></div>
             <div class="step"><span class="step-number">6</span><p>(Optional) Add <strong>Show Notification</strong> &mdash; Title: <em>URL Shortened</em>, Body: <em>Dictionary Value</em>.</p></div>
@@ -199,7 +202,7 @@ const guideHtml = `<!DOCTYPE html>
 
             <h3>Setup</h3>
             <div class="step"><span class="step-number">1</span><p>Copy the code below and <strong>replace <code>YOUR-API-KEY</code></strong> with your actual key.</p></div>
-            <pre><code>javascript:(function(){const url=window.location.href;const title=document.title;const apiKey='YOUR-API-KEY';const domain='https://chom.pm';fetch(domain+'/api/shorten',{method:'POST',headers:{'X-API-Key':apiKey,'Content-Type':'application/json'},body:JSON.stringify({url:url,title:title})}).then(r=>r.json()).then(d=>{if(d.success){navigator.clipboard.writeText(d.shortUrl);alert('Short URL copied!\\n'+d.shortUrl);}else{alert('Error: '+d.error);}}).catch(e=>alert('Network error: '+e.message));})();</code></pre>
+            <pre><code>javascript:(function(){const url=window.location.href;const title=document.title;const apiKey='YOUR-API-KEY';const domain='https://chmp.me';fetch(domain+'/api/shorten',{method:'POST',headers:{'X-API-Key':apiKey,'Content-Type':'application/json'},body:JSON.stringify({url:url,title:title})}).then(r=>r.json()).then(d=>{if(d.success){navigator.clipboard.writeText(d.shortUrl);alert('Short URL copied!\\n'+d.shortUrl);}else{alert('Error: '+d.error);}}).catch(e=>alert('Network error: '+e.message));})();</code></pre>
             <div class="step"><span class="step-number">2</span><p>Create a new bookmark in your browser. Set the <strong>Name</strong> to <em>Shorten URL</em> and paste the code as the <strong>URL</strong>.</p></div>
 
             <h3>Usage</h3>
@@ -215,7 +218,7 @@ const guideHtml = `<!DOCTYPE html>
             <p>Shorten URLs programmatically from any language or tool.</p>
 
             <h3>Endpoint</h3>
-            <pre><code>POST https://chom.pm/api/shorten</code></pre>
+            <pre><code>POST https://chmp.me/api/shorten</code></pre>
 
             <h3>Headers</h3>
             <pre><code>Content-Type: application/json
@@ -234,17 +237,17 @@ X-API-Key: YOUR-API-KEY</code></pre>
   "shortCode": "abc123",
   "url": "https://example.com/long/url",
   "title": "Optional page title",
-  "shortUrl": "https://chom.pm/abc123"
+  "shortUrl": "https://chmp.me/abc123"
 }</code></pre>
 
             <h3>cURL example</h3>
-            <pre><code>curl -X POST https://chom.pm/api/shorten \\
+            <pre><code>curl -X POST https://chmp.me/api/shorten \\
   -H "X-API-Key: YOUR-API-KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://example.com"}'</code></pre>
 
             <h3>JavaScript example</h3>
-            <pre><code>const res = await fetch('https://chom.pm/api/shorten', {
+            <pre><code>const res = await fetch('https://chmp.me/api/shorten', {
   method: 'POST',
   headers: {
     'X-API-Key': 'YOUR-API-KEY',
@@ -259,7 +262,7 @@ console.log(data.shortUrl);</code></pre>
             <pre><code>import requests
 
 resp = requests.post(
-    'https://chom.pm/api/shorten',
+    'https://chmp.me/api/shorten',
     headers={
         'X-API-Key': 'YOUR-API-KEY',
         'Content-Type': 'application/json',
@@ -271,7 +274,7 @@ print(resp.json()['shortUrl'])</code></pre>
             <h3>Shell alias</h3>
             <pre><code># Add to ~/.bashrc or ~/.zshrc
 shorten() {
-  curl -s -X POST https://chom.pm/api/shorten \\
+  curl -s -X POST https://chmp.me/api/shorten \\
     -H "X-API-Key: YOUR-API-KEY" \\
     -H "Content-Type: application/json" \\
     -d "{\\\"url\\\":\\\"$1\\\"}" | jq -r '.shortUrl'
@@ -299,7 +302,11 @@ const adminHtml = `<!DOCTYPE html>
     <link rel="apple-touch-icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/apple-touch-icon.png">
     <link rel="icon" sizes="192x192" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-192.png">
     <link rel="icon" sizes="512x512" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-512.png">
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#e73b42">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="chmp.me">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2308,8 +2315,68 @@ export default {
       return handleApi(request, env, path);
     }
 
-    if (path === '/') {
-      const html = '<!DOCTYPE html><html><head><title>URL Shortener</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"><style>body{font-family:Inter,sans-serif;max-width:600px;margin:100px auto;text-align:center;background:#fdfdfd;color:#353535;padding:20px;}h1{font-size:48px;margin-bottom:20px;font-weight:700;}p{font-size:18px;line-height:1.7;}a{color:#e73b42;text-decoration:none;font-weight:600;}a:hover{color:#d12d34;}@media(prefers-color-scheme:dark){body{background:#231f1f;color:#d9d4d4;}a{color:#ff6b7a;}a:hover{color:#ff8590;}}</style></head><body><h1>' + icons.link + ' URL Shortener</h1><p>Welcome to the URL shortener service.</p><p><a href="/admin">Admin Panel</a></p></body></html>';
+    if (path === '/manifest.json') {
+      const manifest = {
+        name: 'chmp.me URL Shortener',
+        short_name: 'chmp.me',
+        description: 'Fast, simple URL shortener at chmp.me',
+        start_url: '/index',
+        display: 'standalone',
+        background_color: '#fdfdfd',
+        theme_color: '#e73b42',
+        icons: [
+          { src: 'https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+          { src: 'https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+        ],
+      };
+      return new Response(JSON.stringify(manifest, null, 2), {
+        headers: { 'Content-Type': 'application/manifest+json', 'Cache-Control': 'public, max-age=3600' },
+      });
+    }
+
+    if (path === '/' || path === '/index') {
+      const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>chmp.me - URL Shortener</title>
+  <link rel="icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon.ico">
+  <link rel="apple-touch-icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/apple-touch-icon.png">
+  <link rel="icon" sizes="192x192" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e73b42">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="chmp.me">
+  <meta name="description" content="chmp.me - a fast, simple URL shortener">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --accent: #e73b42; --accent-hover: #d12d34; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fdfdfd; color: #353535; padding: 24px; }
+    @media (prefers-color-scheme: dark) { body { background: #231f1f; color: #d9d4d4; } }
+    .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .logo svg { color: var(--accent); }
+    h1 { font-size: 42px; font-weight: 700; letter-spacing: -1px; }
+    h1 span { color: var(--accent); }
+    .tagline { font-size: 18px; color: #7d7d7d; margin-bottom: 40px; text-align: center; }
+    @media (prefers-color-scheme: dark) { .tagline { color: #b9b4b4; } }
+    .cta { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: #fff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; transition: background 0.2s, transform 0.1s; }
+    .cta:hover { background: var(--accent-hover); transform: translateY(-1px); }
+    .footer { margin-top: 48px; font-size: 13px; color: #aaa; }
+  </style>
+</head>
+<body>
+  <div class="logo">${icons.link}</div>
+  <h1><span>chmp</span>.me</h1>
+  <p class="tagline">Fast, simple URL shortening.</p>
+  <a href="/admin" class="cta">${icons.logOut} Admin Login</a>
+  <p class="footer">Powered by Cloudflare Workers</p>
+</body>
+</html>`;
       return htmlResponse(html);
     }
 

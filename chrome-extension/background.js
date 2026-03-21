@@ -29,7 +29,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
     // Call API to shorten URL
     try {
-      const response = await fetch('https://chom.pm/api/shorten', {
+      const response = await fetch('https://chmp.me/api/shorten', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ chrome.commands.onCommand.addListener(async (command) => {
       }
 
       try {
-        const response = await fetch('https://chom.pm/api/shorten', {
+        const response = await fetch('https://chmp.me/api/shorten', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

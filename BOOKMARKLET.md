@@ -17,14 +17,14 @@ A bookmarklet is a bookmark that runs JavaScript code instead of opening a webpa
 Copy this entire JavaScript code (one long line):
 
 ```javascript
-javascript:(function(){const url=window.location.href;const apiKey='YOUR-API-KEY-HERE';const domain='https://chom.pm';fetch(domain+'/api/shorten',{method:'POST',headers:{'X-API-Key':apiKey,'Content-Type':'application/json'},body:JSON.stringify({url:url})}).then(r=>r.json()).then(d=>{if(d.success){navigator.clipboard.writeText(d.shortUrl);alert('✅ Short URL copied to clipboard!\\n\\n'+d.shortUrl);}else{alert('❌ Error: '+d.error);}}).catch(e=>alert('❌ Network error: '+e.message));})();
+javascript:(function(){const url=window.location.href;const apiKey='YOUR-API-KEY-HERE';const domain='https://chmp.me';fetch(domain+'/api/shorten',{method:'POST',headers:{'X-API-Key':apiKey,'Content-Type':'application/json'},body:JSON.stringify({url:url})}).then(r=>r.json()).then(d=>{if(d.success){navigator.clipboard.writeText(d.shortUrl);alert('✅ Short URL copied to clipboard!\\n\\n'+d.shortUrl);}else{alert('❌ Error: '+d.error);}}).catch(e=>alert('❌ Network error: '+e.message));})();
 ```
 
 **IMPORTANT:** Replace `YOUR-API-KEY-HERE` with your actual API key!
 
 After replacing your API key, it should look like:
 ```javascript
-javascript:(function(){const url=window.location.href;const apiKey='sk_live_abc123XYZ789';const domain='https://chom.pm';fetch(domain+'/api/shorten',{method:'POST',headers:{'X-API-Key':apiKey,'Content-Type':'application/json'},body:JSON.stringify({url:url})}).then(r=>r.json()).then(d=>{if(d.success){navigator.clipboard.writeText(d.shortUrl);alert('✅ Short URL copied to clipboard!\\n\\n'+d.shortUrl);}else{alert('❌ Error: '+d.error);}}).catch(e=>alert('❌ Network error: '+e.message));})();
+javascript:(function(){const url=window.location.href;const apiKey='sk_live_abc123XYZ789';const domain='https://chmp.me';fetch(domain+'/api/shorten',{method:'POST',headers:{'X-API-Key':apiKey,'Content-Type':'application/json'},body:JSON.stringify({url:url})}).then(r=>r.json()).then(d=>{if(d.success){navigator.clipboard.writeText(d.shortUrl);alert('✅ Short URL copied to clipboard!\\n\\n'+d.shortUrl);}else{alert('❌ Error: '+d.error);}}).catch(e=>alert('❌ Network error: '+e.message));})();
 ```
 
 ### Step 2: Create the Bookmark
@@ -73,7 +73,7 @@ https://www.example.com/articles/2025/01/this-is-a-very-long-article-title-about
 ```
 
 1. Click the bookmarklet
-2. You get: `https://chom.pm/abc123`
+2. You get: `https://chmp.me/abc123`
 3. It's already in your clipboard, ready to paste!
 
 ---
@@ -83,7 +83,7 @@ https://www.example.com/articles/2025/01/this-is-a-very-long-article-title-about
 If you want to specify a custom short code, use this version:
 
 ```javascript
-javascript:(function(){const url=window.location.href;const apiKey='YOUR-API-KEY-HERE';const domain='https://chom.pm';const code=prompt('Enter custom short code (or leave blank for random):');const body=code?{url:url,shortCode:code}:{url:url};fetch(domain+'/api/shorten',{method:'POST',headers:{'X-API-Key':apiKey,'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json()).then(d=>{if(d.success){navigator.clipboard.writeText(d.shortUrl);alert('✅ Short URL copied to clipboard!\\n\\n'+d.shortUrl);}else{alert('❌ Error: '+d.error);}}).catch(e=>alert('❌ Network error: '+e.message));})();
+javascript:(function(){const url=window.location.href;const apiKey='YOUR-API-KEY-HERE';const domain='https://chmp.me';const code=prompt('Enter custom short code (or leave blank for random):');const body=code?{url:url,shortCode:code}:{url:url};fetch(domain+'/api/shorten',{method:'POST',headers:{'X-API-Key':apiKey,'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json()).then(d=>{if(d.success){navigator.clipboard.writeText(d.shortUrl);alert('✅ Short URL copied to clipboard!\\n\\n'+d.shortUrl);}else{alert('❌ Error: '+d.error);}}).catch(e=>alert('❌ Network error: '+e.message));})();
 ```
 
 This version will:
@@ -110,7 +110,7 @@ This version will:
 
 ### CORS or Network errors
 - Make sure your worker is deployed and accessible
-- Check that the domain in the code matches your domain (`https://chom.pm`)
+- Check that the domain in the code matches your domain (`https://chmp.me`)
 
 ---
 

@@ -38,7 +38,7 @@ On success, the short URL is copied to your clipboard.
 
 The extension currently posts to:
 
-- `https://chom.pm/api/shorten`
+- `https://chmp.me/api/shorten`
 
 If your Worker is hosted on a different domain, update both of these files:
 

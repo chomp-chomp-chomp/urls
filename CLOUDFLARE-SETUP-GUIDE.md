@@ -1,6 +1,6 @@
-# Complete Cloudflare Setup Guide for chom.pm
+# Complete Cloudflare Setup Guide for chmp.me
 
-This guide will walk you through setting up your domain `chom.pm` with Cloudflare and deploying your URL shortener.
+This guide will walk you through setting up your domain `chmp.me` with Cloudflare and deploying your URL shortener.
 
 ## Part 1: Adding Domain to Cloudflare
 
@@ -10,7 +10,7 @@ This guide will walk you through setting up your domain `chom.pm` with Cloudflar
 
 ### Step 2: Add Your Domain to Cloudflare
 1. Click **"Add a Site"** button
-2. Enter your domain: `chom.pm`
+2. Enter your domain: `chmp.me`
 3. Click **"Add Site"**
 4. Select the **Free Plan** (or any plan you prefer)
 5. Click **"Continue"**
@@ -40,7 +40,7 @@ ns2.cloudflare.com
 
 ### Step 2: Access Domain Management
 1. Click **"Domains"** or **"My Domains"** in the menu
-2. Find `chom.pm` in your domain list
+2. Find `chmp.me` in your domain list
 3. Click on the domain name to open domain settings
 
 ### Step 3: Update Nameservers
@@ -61,13 +61,13 @@ ns2.cloudflare.com
 ## Part 3: Configure Cloudflare Settings (After DNS Active)
 
 ### Step 1: SSL/TLS Settings
-1. Go to Cloudflare Dashboard > `chom.pm`
+1. Go to Cloudflare Dashboard > `chmp.me`
 2. Click **"SSL/TLS"** in the sidebar
 3. Set SSL/TLS encryption mode to **"Full"** or **"Full (strict)"**
 
 ### Step 2: Add DNS Records (if needed)
 1. Go to **"DNS"** section
-2. If you want `chom.pm` to point to your worker:
+2. If you want `chmp.me` to point to your worker:
    - You'll add an A record or configure after worker deployment
    - For now, you can skip this - we'll handle it after deploying the worker
 
@@ -138,18 +138,18 @@ Published chomp-urls
 
 **Save this URL** - this is your worker URL!
 
-### Step 6: Configure Custom Domain (chom.pm)
+### Step 6: Configure Custom Domain (chmp.me)
 
 1. Go to Cloudflare Dashboard > **Workers & Pages**
 2. Click on your worker: **chomp-urls**
 3. Go to **Settings** > **Domains & Routes**
 4. Click **"Add Custom Domain"**
-5. Enter: `chom.pm`
+5. Enter: `chmp.me`
 6. Click **"Add Custom Domain"**
 
 Cloudflare will automatically create the DNS records needed.
 
-**Your URL shortener will now be live at: `https://chom.pm`**
+**Your URL shortener will now be live at: `https://chmp.me`**
 
 ---
 
@@ -157,7 +157,7 @@ Cloudflare will automatically create the DNS records needed.
 
 ### Access the Admin Panel
 
-1. Go to: `https://chom.pm/admin`
+1. Go to: `https://chmp.me/admin`
 2. Login with the admin password you set in Part 4, Step 4
 3. You'll see:
    - URL statistics
@@ -171,13 +171,13 @@ Cloudflare will automatically create the DNS records needed.
 1. Enter long URL: `https://example.com/very/long/url/here`
 2. Leave "Custom Short Code" blank
 3. Click "Create Short URL"
-4. You'll get a random code like: `https://chom.pm/abc123`
+4. You'll get a random code like: `https://chmp.me/abc123`
 
 **Option 2: Custom Short Code**
 1. Enter long URL: `https://example.com/my-newsletter`
 2. Enter custom code: `newsletter`
 3. Click "Create Short URL"
-4. You'll get: `https://chom.pm/newsletter`
+4. You'll get: `https://chmp.me/newsletter`
 
 ### Managing URLs
 - View all URLs in the list below the form
@@ -196,7 +196,7 @@ All API requests require the `X-API-Key` header with the API key you set in Part
 
 **Using cURL:**
 ```bash
-curl -X POST https://chom.pm/api/shorten \
+curl -X POST https://chmp.me/api/shorten \
   -H "X-API-Key: your-api-key-here" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com/long/url"}'
@@ -208,13 +208,13 @@ curl -X POST https://chom.pm/api/shorten \
   "success": true,
   "shortCode": "abc123",
   "url": "https://example.com/long/url",
-  "shortUrl": "https://chom.pm/abc123"
+  "shortUrl": "https://chmp.me/abc123"
 }
 ```
 
 **With Custom Short Code:**
 ```bash
-curl -X POST https://chom.pm/api/shorten \
+curl -X POST https://chmp.me/api/shorten \
   -H "X-API-Key: your-api-key-here" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com/long/url", "shortCode": "custom"}'
@@ -224,7 +224,7 @@ curl -X POST https://chom.pm/api/shorten \
 
 ```javascript
 async function createShortUrl(longUrl, customCode = null) {
-  const response = await fetch('https://chom.pm/api/shorten', {
+  const response = await fetch('https://chmp.me/api/shorten', {
     method: 'POST',
     headers: {
       'X-API-Key': 'your-api-key-here',
@@ -259,7 +259,7 @@ import requests
 import json
 
 def create_short_url(long_url, custom_code=None):
-    url = 'https://chom.pm/api/shorten'
+    url = 'https://chmp.me/api/shorten'
     headers = {
         'X-API-Key': 'your-api-key-here',
         'Content-Type': 'application/json'
@@ -289,7 +289,7 @@ create_short_url('https://example.com/newsletter', 'news-jan-2026')
 ```php
 <?php
 function createShortUrl($longUrl, $customCode = null) {
-    $url = 'https://chom.pm/api/shorten';
+    $url = 'https://chmp.me/api/shorten';
 
     $payload = ['url' => $longUrl];
     if ($customCode) {
@@ -378,13 +378,13 @@ createShortUrl('https://example.com/newsletter', 'news-jan-2026');
 ### 1. Test Admin Panel
 ```bash
 # Open in browser
-https://chom.pm/admin
+https://chmp.me/admin
 ```
 
 ### 2. Test API
 ```bash
 # Test with cURL
-curl -X POST https://chom.pm/api/shorten \
+curl -X POST https://chmp.me/api/shorten \
   -H "X-API-Key: your-api-key-here" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://google.com", "shortCode": "test"}'
@@ -393,7 +393,7 @@ curl -X POST https://chom.pm/api/shorten \
 ### 3. Test Short URL Redirect
 ```bash
 # Create a test short URL via admin or API, then visit it
-https://chom.pm/test
+https://chmp.me/test
 # Should redirect to the long URL you specified
 ```
 
@@ -403,7 +403,7 @@ https://chom.pm/test
 
 ### DNS Not Propagating
 - Wait up to 24 hours
-- Check status: https://www.whatsmydns.net/#NS/chom.pm
+- Check status: https://www.whatsmydns.net/#NS/chmp.me
 - Verify nameservers are correct at internet.bs
 
 ### Worker Not Deploying
@@ -455,10 +455,10 @@ npx wrangler login
 
 ## What You Have Now
 
-✅ **Domain**: chom.pm pointing to Cloudflare
-✅ **URL Shortener**: Fully functional at https://chom.pm
-✅ **Admin Panel**: Available at https://chom.pm/admin
-✅ **Public API**: Available at https://chom.pm/api/shorten
+✅ **Domain**: chmp.me pointing to Cloudflare
+✅ **URL Shortener**: Fully functional at https://chmp.me
+✅ **Admin Panel**: Available at https://chmp.me/admin
+✅ **Public API**: Available at https://chmp.me/api/shorten
 ✅ **Global CDN**: Powered by Cloudflare's edge network
 ✅ **SSL Certificate**: Automatic HTTPS via Cloudflare
 

@@ -88,7 +88,7 @@ Once the secrets are added:
    - Click on it to watch the progress
 
 3. After it completes (usually 30-60 seconds):
-   - Visit https://chom.pm/admin
+   - Visit https://chmp.me/admin
    - Your latest code should be deployed!
 
 ---
@@ -103,7 +103,7 @@ GitHub Actions will:
 1. ✅ Check out your code
 2. ✅ Install dependencies
 3. ✅ Deploy to Cloudflare Workers
-4. ✅ Update your live worker at chom.pm
+4. ✅ Update your live worker at chmp.me
 
 **No more manual copy/paste!** 🎉
 

@@ -152,7 +152,7 @@ Create `manifest.json` for PWA support:
 ```json
 {
   "name": "URL Shortener",
-  "short_name": "chom.pm",
+  "short_name": "chmp.me",
   "description": "URL shortener admin panel",
   "start_url": "/admin",
   "display": "standalone",
