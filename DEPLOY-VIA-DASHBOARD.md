@@ -143,13 +143,13 @@ Still in the Settings page:
 
 ---
 
-## Step 7: Add Custom Domain (chom.pm)
+## Step 7: Add Custom Domain (chmp.me)
 
 1. In your worker dashboard (**Workers & Pages** → **chomp-urls**)
 2. Click **Settings** tab
 3. Click **Domains & Routes**
 4. Click **Add Custom Domain**
-5. Enter: `chom.pm`
+5. Enter: `chmp.me`
 6. Click **Add Custom Domain**
 
 Cloudflare will automatically:
@@ -157,7 +157,7 @@ Cloudflare will automatically:
 - Set up SSL certificate
 - Route traffic to your worker
 
-**Done! Your URL shortener is now live at https://chom.pm** 🎉
+**Done! Your URL shortener is now live at https://chmp.me** 🎉
 
 ---
 
@@ -212,8 +212,8 @@ Would you like me to create that single-file version? Let me know!
 - [ ] Worker URL accessible
 - [ ] Admin page loads at `/admin`
 - [ ] Can login with admin password
-- [ ] Custom domain `chom.pm` added
-- [ ] Can access https://chom.pm/admin
+- [ ] Custom domain `chmp.me` added
+- [ ] Can access https://chmp.me/admin
 
 ---
 
@@ -237,9 +237,9 @@ Would you like me to create that single-file version? Let me know!
 
 ## What You'll Have After Completion
 
-✅ **URL Shortener:** https://chom.pm
-✅ **Admin Panel:** https://chom.pm/admin
-✅ **API Endpoint:** https://chom.pm/api/shorten
+✅ **URL Shortener:** https://chmp.me
+✅ **Admin Panel:** https://chmp.me/admin
+✅ **API Endpoint:** https://chmp.me/api/shorten
 ✅ **Global CDN:** Fast redirects worldwide
 ✅ **SSL/HTTPS:** Automatic secure connections
 

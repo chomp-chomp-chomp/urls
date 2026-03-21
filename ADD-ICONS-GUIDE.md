@@ -122,20 +122,20 @@ const icons = {
 ## ✅ Testing
 
 ### Browser Tab Icon (Favicon)
-1. Visit your admin panel at https://chom.pm/admin
+1. Visit your admin panel at https://chmp.me/admin
 2. Check the browser tab - you should see your icon
 3. Bookmark the page - the bookmark should show your icon
 
 ### iPhone/iPad Home Screen Icon
 1. Open Safari on iOS
-2. Visit https://chom.pm/admin
+2. Visit https://chmp.me/admin
 3. Tap **Share** → **Add to Home Screen**
 4. You should see your 180x180 touch icon
 5. Add it and check your home screen
 
 ### Android Home Screen Icon
 1. Open Chrome on Android
-2. Visit https://chom.pm/admin
+2. Visit https://chmp.me/admin
 3. Menu → **Add to Home Screen**
 4. You should see your 192x192 icon
 5. Add it and check your home screen

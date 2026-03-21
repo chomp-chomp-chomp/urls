@@ -205,7 +205,7 @@ Create a bash alias:
 ```bash
 # Add to ~/.bashrc or ~/.zshrc
 alias shorten='function _shorten() {
-  curl -X POST https://chom.pm/api/shorten \
+  curl -X POST https://chmp.me/api/shorten \
     -H "X-API-Key: YOUR-API-KEY" \
     -H "Content-Type: application/json" \
     -d "{\"url\":\"$1\"}" | jq -r ".shortUrl" | pbcopy && pbpaste

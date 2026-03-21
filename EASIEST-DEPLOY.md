@@ -96,24 +96,24 @@ Still in the **Settings** → **Variables** page:
 
 ---
 
-## Step 7: Add Your Custom Domain (chom.pm)
+## Step 7: Add Your Custom Domain (chmp.me)
 
 1. Still in your worker page, click **Settings**
 2. Click **Domains & Routes**
 3. Click **Add Custom Domain**
-4. Enter: `chom.pm`
+4. Enter: `chmp.me`
 5. Click **Add Custom Domain**
 
 Cloudflare automatically sets everything up!
 
-**Your URL shortener is now live at: https://chom.pm** 🚀
+**Your URL shortener is now live at: https://chmp.me** 🚀
 
 ---
 
 ## What You Can Do Now
 
 ### Create Short URLs (Admin Panel):
-1. Go to https://chom.pm/admin
+1. Go to https://chmp.me/admin
 2. Login with your admin password
 3. Enter a long URL
 4. (Optional) Enter a custom short code
@@ -122,16 +122,16 @@ Cloudflare automatically sets everything up!
 
 ### Use the API:
 ```bash
-curl -X POST https://chom.pm/api/shorten \
+curl -X POST https://chmp.me/api/shorten \
   -H "X-API-Key: YOUR-API-KEY-FROM-STEP-5" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com/long/url"}'
 ```
 
 ### Share Short URLs:
-- https://chom.pm/abc123
-- https://chom.pm/newsletter
-- https://chom.pm/signup
+- https://chmp.me/abc123
+- https://chmp.me/newsletter
+- https://chmp.me/signup
 - etc.
 
 ---
@@ -158,7 +158,7 @@ curl -X POST https://chom.pm/api/shorten \
 - Clear browser cache or try incognito mode
 
 ### Custom domain not working
-- Make sure chom.pm nameservers point to Cloudflare
+- Make sure chmp.me nameservers point to Cloudflare
 - DNS can take up to 24 hours to propagate
 - Check Cloudflare dashboard for domain status
 

@@ -15,7 +15,7 @@ Use Apple Shortcuts to add **Shorten URL** directly to the iOS Share Sheet.
 
 You need:
 
-- Your API endpoint (default in this project: `https://chom.pm/api/shorten`)
+- Your API endpoint (default in this project: `https://chmp.me/api/shorten`)
 - Your `API_KEY` value from Worker secrets/vars
 
 ---
@@ -42,7 +42,7 @@ Add these actions in order.
 #### Action B — Get Contents of URL
 
 - Action: **Get Contents of URL**
-- URL: `https://chom.pm/api/shorten`
+- URL: `https://chmp.me/api/shorten`
 - Method: `POST`
 - Request Body: `JSON`
 - JSON key/value:
@@ -123,7 +123,7 @@ If left blank, your API will still generate a random code.
 - Test API separately with curl:
 
 ```bash
-curl -X POST https://chom.pm/api/shorten \
+curl -X POST https://chmp.me/api/shorten \
   -H 'X-API-Key: YOUR_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"url":"https://example.com"}'

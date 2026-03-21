@@ -82,7 +82,7 @@ async function shortenUrl() {
   button.textContent = 'Shortening...';
 
   try {
-    const response = await fetch('https://chom.pm/api/shorten', {
+    const response = await fetch('https://chmp.me/api/shorten', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

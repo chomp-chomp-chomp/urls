@@ -11,7 +11,7 @@ All API requests require an API key sent in the `X-API-Key` header.
 ### Basic Example
 
 ```bash
-curl -X POST https://chom.pm/api/shorten \
+curl -X POST https://chmp.me/api/shorten \
   -H "X-API-Key: YOUR-API-KEY" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com/long/url"}'
@@ -23,7 +23,7 @@ curl -X POST https://chom.pm/api/shorten \
   "success": true,
   "shortCode": "abc123",
   "url": "https://example.com/long/url",
-  "shortUrl": "https://chom.pm/abc123"
+  "shortUrl": "https://chmp.me/abc123"
 }
 ```
 
@@ -73,7 +73,7 @@ X-API-Key: your-api-key-here
   "success": true,
   "shortCode": "abc123",
   "url": "https://example.com/very/long/url",
-  "shortUrl": "https://chom.pm/abc123"
+  "shortUrl": "https://chmp.me/abc123"
 }
 ```
 
@@ -127,7 +127,7 @@ X-API-Key: your-api-key-here
 
 ```javascript
 async function shortenUrl(longUrl, customCode = null) {
-  const response = await fetch('https://chom.pm/api/shorten', {
+  const response = await fetch('https://chmp.me/api/shorten', {
     method: 'POST',
     headers: {
       'X-API-Key': 'your-api-key-here',
@@ -164,7 +164,7 @@ shortenUrl('https://example.com/newsletter', 'news-jan-2026')
 import requests
 
 def shorten_url(long_url, custom_code=None):
-    url = 'https://chom.pm/api/shorten'
+    url = 'https://chmp.me/api/shorten'
     headers = {
         'X-API-Key': 'your-api-key-here',
         'Content-Type': 'application/json'
@@ -194,7 +194,7 @@ shorten_url('https://example.com/newsletter', 'news-jan-2026')
 ```php
 <?php
 function shortenUrl($longUrl, $customCode = null) {
-    $url = 'https://chom.pm/api/shorten';
+    $url = 'https://chmp.me/api/shorten';
 
     $payload = ['url' => $longUrl];
     if ($customCode) {
@@ -238,7 +238,7 @@ require 'json'
 require 'uri'
 
 def shorten_url(long_url, custom_code = nil)
-  uri = URI('https://chom.pm/api/shorten')
+  uri = URI('https://chmp.me/api/shorten')
   http = Net::HTTP.new(uri.host, uri.port)
   http.use_ssl = true
 
@@ -303,7 +303,7 @@ func shortenURL(longURL, customCode string) (string, error) {
         return "", err
     }
 
-    req, err := http.NewRequest("POST", "https://chom.pm/api/shorten", bytes.NewBuffer(jsonData))
+    req, err := http.NewRequest("POST", "https://chmp.me/api/shorten", bytes.NewBuffer(jsonData))
     if err != nil {
         return "", err
     }
@@ -439,7 +439,7 @@ def track_and_shorten(url, campaign_name):
 
 # Usage
 track_and_shorten('https://example.com/sale', 'jan-sale')
-# Creates: https://chom.pm/jan-sale-202601
+# Creates: https://chmp.me/jan-sale-202601
 ```
 
 ---
@@ -517,19 +517,19 @@ except Exception as e:
 
 ```bash
 # Test basic shortening
-curl -X POST https://chom.pm/api/shorten \
+curl -X POST https://chmp.me/api/shorten \
   -H "X-API-Key: your-api-key" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://google.com"}'
 
 # Test with custom code
-curl -X POST https://chom.pm/api/shorten \
+curl -X POST https://chmp.me/api/shorten \
   -H "X-API-Key: your-api-key" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://google.com", "shortCode": "test123"}'
 
 # Test invalid API key
-curl -X POST https://chom.pm/api/shorten \
+curl -X POST https://chmp.me/api/shorten \
   -H "X-API-Key: wrong-key" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://google.com"}'
@@ -538,7 +538,7 @@ curl -X POST https://chom.pm/api/shorten \
 ### Test with Postman
 
 1. Create new POST request
-2. URL: `https://chom.pm/api/shorten`
+2. URL: `https://chmp.me/api/shorten`
 3. Headers:
    - `X-API-Key`: `your-api-key`
    - `Content-Type`: `application/json`
