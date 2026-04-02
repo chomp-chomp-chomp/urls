@@ -2504,7 +2504,7 @@ export default {
 
     .card-name {
       font-size: 0.95em;
-      font-weight: 500;
+      font-weight: 400;
       margin-bottom: 2px;
       color: var(--color-text);
     }
@@ -2556,7 +2556,7 @@ export default {
 
     .accordion-title {
       font-size: 0.95em;
-      font-weight: 500;
+      font-weight: 400;
       margin-bottom: 2px;
       color: var(--color-text);
     }
