@@ -2539,6 +2539,7 @@ export default {
       cursor: pointer;
       text-align: left;
       color: inherit;
+      line-height: 1.7;
       transition: background-color 0.2s;
     }
 
@@ -2623,14 +2624,14 @@ export default {
     }
 
     .inner-card-name {
-      font-size: 0.9em;
+      font-size: 0.95em;
       font-weight: 500;
       margin-bottom: 1px;
       color: var(--color-text);
     }
 
     .inner-card-sub {
-      font-size: 0.75em;
+      font-size: 0.8em;
       color: var(--color-text-light);
       white-space: nowrap;
       overflow: hidden;
@@ -2731,7 +2732,7 @@ export default {
     <div class="top-section">
       <div class="section-label">Chomp Chomp</div>
 
-      <div class="accordion open" id="acc-chomp">
+      <div class="accordion" id="acc-chomp">
         <button class="accordion-trigger" onclick="toggleAccordion('acc-chomp')">
           <div class="accordion-trigger-body">
             <div class="accordion-title">Chom.ps</div>
@@ -2786,13 +2787,6 @@ export default {
           </div>
         </div>
       </div>
-
-      <a href="https://ps.chom.ps" class="card">
-        <div class="card-body">
-          <div class="card-name">.ps</div>
-          <div class="card-sub">Postscript. (Cookies, etc. &hellip; and so on.)</div>
-        </div>
-      </a>
 
       <a href="https://chompchomp.cc" class="card">
         <div class="card-body">
@@ -3030,6 +3024,18 @@ export default {
       </div>
 
     </div>
+
+    <div class="lab-divider"></div>
+
+    <div class="section-label">Postscript</div>
+
+    <a href="https://ps.chom.ps" class="card">
+      <div class="card-body">
+        <div class="card-name">.ps</div>
+        <div class="card-sub">Cookies, etc. &hellip; and so on.</div>
+      </div>
+    </a>
+
   </div>
 
   <footer>
