@@ -2996,13 +2996,13 @@ export default {
                 <div class="inner-card-sub">Not in the oven</div>
               </div>
             </a>
-            <a href="https://library.chom.ps/" class="inner-card">
+            <a href="https://library.chompchomp.cc/" class="inner-card">
               <div class="inner-card-body">
                 <div class="inner-card-name">Library</div>
                 <div class="inner-card-sub">Chomp OPAC</div>
               </div>
             </a>
-            <a href="https://recipes.chom.ps/" class="inner-card">
+            <a href="https://recipes.chompchomp.cc/" class="inner-card">
               <div class="inner-card-body">
                 <div class="inner-card-name">Recipe Box</div>
                 <div class="inner-card-sub">IYKYK</div>
@@ -3040,7 +3040,7 @@ export default {
   </div>
 
   <footer>
-    <a href="https://chom.ps">chom.ps</a>
+    Chomp Chomp <a href="https://chom.ps">chom.ps</a>
   </footer>
 
   <script>
