@@ -2393,7 +2393,7 @@ export default {
     }
 
     html {
-      font-size: 16px;
+      font-size: 17px;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -2415,19 +2415,11 @@ export default {
       margin-bottom: 48px;
     }
 
-    .wordmark {
-      font-family: 'DM Mono', monospace;
-      font-size: 1.1rem;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-    }
-
-    .tagline {
-      font-size: 0.85rem;
-      color: var(--text-sub);
-      font-style: italic;
-      font-weight: 300;
+    .hero {
+      max-width: 260px;
+      width: 100%;
+      display: block;
+      margin: 0 auto;
     }
 
     .container {
@@ -2571,7 +2563,7 @@ export default {
     .accordion-quip {
       font-family: 'DM Mono', monospace;
       font-size: 0.67rem;
-      color: var(--text-sub);
+      color: var(--text-muted);
       font-style: italic;
       font-weight: 300;
     }
@@ -2660,8 +2652,10 @@ export default {
 <body>
 
   <header class="header">
-    <div class="wordmark">chmp.me</div>
-    <div class="tagline">not a startup, but made from scratch</div>
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://ik.imagekit.io/chompchomp/chompme%20index%20dark">
+      <img class="hero" src="https://ik.imagekit.io/chompchomp/chompme%20index%20light" alt="chmp.me">
+    </picture>
   </header>
 
   <div class="container">
