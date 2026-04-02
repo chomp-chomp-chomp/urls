@@ -2786,10 +2786,10 @@ export default {
         </div>
       </a>
 
-      <a href="https://chom.ps/store.html" class="card">
+      <a href="https://chompchomp.cc" class="card">
         <div class="card-body">
           <div class="card-name">Store</div>
-          <div class="card-sub">chom.ps/store</div>
+          <div class="card-sub">chompchomp.cc</div>
         </div>
       </a>
     </div>
@@ -2819,86 +2819,80 @@ export default {
                 <div class="inner-card-sub">All tools</div>
               </div>
             </a>
-            <div class="nested-accordion" id="nest-everyday">
-              <button class="nested-trigger" onclick="toggleNested('nest-everyday')">
-                <span class="nested-trigger-label">Everyday Tools</span>
-                <span class="nested-chevron">&#9660;</span>
-              </button>
-              <div class="nested-content">
-                <div class="nested-inner">
-                  <a href="https://chom.ps/tools/color.html" class="inner-card">
-                    <div class="inner-card-body">
-                      <div class="inner-card-name">Color</div>
-                      <div class="inner-card-sub">Palettes · Conversions · Contrast</div>
-                    </div>
-                  </a>
-                  <a href="https://chom.ps/tools/convert.html" class="inner-card">
-                    <div class="inner-card-body">
-                      <div class="inner-card-name">Convert</div>
-                      <div class="inner-card-sub">Length · Volume · Weight</div>
-                    </div>
-                  </a>
-                  <a href="https://chom.ps/tools/currency.html" class="inner-card">
-                    <div class="inner-card-body">
-                      <div class="inner-card-name">Currency</div>
-                      <div class="inner-card-sub">Exchange Rates · ECB</div>
-                    </div>
-                  </a>
-                  <a href="https://chom.ps/tools/random.html" class="inner-card">
-                    <div class="inner-card-body">
-                      <div class="inner-card-name">Randomness</div>
-                      <div class="inner-card-sub">Numbers · Dice · Strings</div>
-                    </div>
-                  </a>
-                  <a href="https://chom.ps/tools/text.html" class="inner-card">
-                    <div class="inner-card-body">
-                      <div class="inner-card-name">Text</div>
-                      <div class="inner-card-sub">Transform · Sort · Clean</div>
-                    </div>
-                  </a>
-                  <a href="https://chom.ps/tools/time.html" class="inner-card">
-                    <div class="inner-card-body">
-                      <div class="inner-card-name">Time</div>
-                      <div class="inner-card-sub">Timestamps · Timezones</div>
-                    </div>
-                  </a>
-                  <a href="https://chom.ps/tools/weather.html" class="inner-card">
-                    <div class="inner-card-body">
-                      <div class="inner-card-name">Weather</div>
-                      <div class="inner-card-sub">Temperature · Comfort</div>
-                    </div>
-                  </a>
-                </div>
+            <a href="https://chom.ps/tools/color.html" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Color</div>
+                <div class="inner-card-sub">Palettes · Conversions · Contrast</div>
               </div>
-            </div>
-            <div class="nested-accordion" id="nest-dev">
-              <button class="nested-trigger" onclick="toggleNested('nest-dev')">
-                <span class="nested-trigger-label">Developer Tools</span>
-                <span class="nested-chevron">&#9660;</span>
-              </button>
-              <div class="nested-content">
-                <div class="nested-inner">
-                  <a href="https://chom.ps/tools/encode.html" class="inner-card">
-                    <div class="inner-card-body">
-                      <div class="inner-card-name">Encode</div>
-                      <div class="inner-card-sub">URI · Base64 · Hash</div>
-                    </div>
-                  </a>
-                  <a href="https://chom.ps/tools/ip.html" class="inner-card">
-                    <div class="inner-card-body">
-                      <div class="inner-card-name">Whois</div>
-                      <div class="inner-card-sub">IP · Owner · Location</div>
-                    </div>
-                  </a>
-                  <a href="https://chom.ps/tools/subnet.html" class="inner-card">
-                    <div class="inner-card-body">
-                      <div class="inner-card-name">Subnet</div>
-                      <div class="inner-card-sub">CIDR · Network Range</div>
-                    </div>
-                  </a>
-                </div>
+            </a>
+            <a href="https://chom.ps/tools/convert.html" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Convert</div>
+                <div class="inner-card-sub">Length · Volume · Weight</div>
               </div>
-            </div>
+            </a>
+            <a href="https://chom.ps/tools/currency.html" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Currency</div>
+                <div class="inner-card-sub">Exchange Rates · ECB</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/tools/random.html" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Randomness</div>
+                <div class="inner-card-sub">Numbers · Dice · Strings</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/tools/text.html" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Text</div>
+                <div class="inner-card-sub">Transform · Sort · Clean</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/tools/time.html" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Time</div>
+                <div class="inner-card-sub">Timestamps · Timezones</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/tools/weather.html" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Weather</div>
+                <div class="inner-card-sub">Temperature · Comfort</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion" id="acc-dev">
+        <button class="accordion-trigger" onclick="toggleAccordion('acc-dev')">
+          <div class="accordion-trigger-body">
+            <div class="accordion-title">Spatulas</div>
+            <div class="accordion-quip">Developing, folding, and such.</div>
+          </div>
+          <span class="accordion-chevron">&#9660;</span>
+        </button>
+        <div class="accordion-content">
+          <div class="accordion-inner">
+            <a href="https://chom.ps/tools/encode.html" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Encode</div>
+                <div class="inner-card-sub">URI · Base64 · Hash</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/tools/ip.html" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Whois</div>
+                <div class="inner-card-sub">IP · Owner · Location</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/tools/subnet.html" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Subnet</div>
+                <div class="inner-card-sub">CIDR · Network Range</div>
+              </div>
+            </a>
           </div>
         </div>
       </div>
