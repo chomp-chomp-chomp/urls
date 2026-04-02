@@ -2539,6 +2539,7 @@ export default {
       cursor: pointer;
       text-align: left;
       color: inherit;
+      font-size: inherit;
       line-height: 1.7;
       transition: background-color 0.2s;
     }
@@ -2554,8 +2555,8 @@ export default {
     }
 
     .accordion-title {
-      font-size: 1.05em;
-      font-weight: 500;
+      font-size: 1.1em;
+      font-weight: 600;
       margin-bottom: 2px;
       color: var(--color-text);
     }
@@ -2624,14 +2625,14 @@ export default {
     }
 
     .inner-card-name {
-      font-size: 0.85em;
+      font-size: 0.82em;
       font-weight: 500;
       margin-bottom: 1px;
       color: var(--color-text);
     }
 
     .inner-card-sub {
-      font-size: 0.72em;
+      font-size: 0.68em;
       color: var(--color-text-light);
       white-space: nowrap;
       overflow: hidden;
