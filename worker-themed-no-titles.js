@@ -3040,7 +3040,7 @@ export default {
   </div>
 
   <footer>
-    Chomp Chomp <a href="https://chom.ps">chom.ps</a>
+    <a href="https://chom.ps">Chomp Chomp chom.ps</a>
   </footer>
 
   <script>
