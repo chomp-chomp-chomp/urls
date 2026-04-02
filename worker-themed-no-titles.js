@@ -2555,8 +2555,8 @@ export default {
     }
 
     .accordion-title {
-      font-size: 1.1em;
-      font-weight: 600;
+      font-size: 0.95em;
+      font-weight: 500;
       margin-bottom: 2px;
       color: var(--color-text);
     }
