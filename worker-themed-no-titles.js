@@ -2340,41 +2340,622 @@ export default {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>chmp.me - URL Shortener</title>
+  <title>chmp.me</title>
   <link rel="icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon.ico">
   <link rel="apple-touch-icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/apple-touch-icon.png">
-  <link rel="icon" sizes="192x192" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-192.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-512.png">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e73b42">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="chmp.me">
-  <meta name="description" content="chmp.me - a fast, simple URL shortener">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+
   <style>
-    :root { --accent: #e73b42; --accent-hover: #d12d34; }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fdfdfd; color: #353535; padding: 24px; }
-    @media (prefers-color-scheme: dark) { body { background: #231f1f; color: #d9d4d4; } }
-    .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-    .logo svg { color: var(--accent); }
-    h1 { font-size: 42px; font-weight: 700; letter-spacing: -1px; }
-    h1 span { color: var(--accent); }
-    .tagline { font-size: 18px; color: #7d7d7d; margin-bottom: 40px; text-align: center; }
-    @media (prefers-color-scheme: dark) { .tagline { color: #b9b4b4; } }
-    .cta { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: #fff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; transition: background 0.2s, transform 0.1s; }
-    .cta:hover { background: var(--accent-hover); transform: translateY(-1px); }
-    .footer { margin-top: 48px; font-size: 13px; color: #aaa; }
+    :root {
+      --accent: #e73b42;
+      --accent-dim: rgba(231,59,66,0.10);
+      --bg: #faf9f7;
+      --bg-card: #ffffff;
+      --border: #e8e4de;
+      --border-light: #f0ece6;
+      --text: #1c1917;
+      --text-muted: #78716c;
+      --text-sub: #a8a29e;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+      --shadow-hover: 0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.08);
+      --radius: 10px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141210;
+        --bg-card: #1e1b18;
+        --border: #2c2825;
+        --border-light: #26221f;
+        --text: #e8e4de;
+        --text-muted: #a8a29e;
+        --text-sub: #6b655f;
+        --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+        --shadow-hover: 0 2px 8px rgba(0,0,0,0.4), 0 8px 32px rgba(0,0,0,0.3);
+        --accent-dim: rgba(231,59,66,0.13);
+      }
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 48px 20px 80px;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .wordmark {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .tagline {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      font-style: italic;
+      font-weight: 300;
+    }
+
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      padding-left: 2px;
+    }
+
+    .section-heading {
+      margin-bottom: 16px;
+      padding-left: 2px;
+    }
+
+    .section-heading-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .section-heading-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      font-weight: 300;
+      line-height: 1.5;
+    }
+
+    .lab-divider {
+      height: 1px;
+      background: var(--border-light);
+      margin: 26px 0 18px;
+    }
+
+    .top-section {
+      margin-bottom: 10px;
+    }
+
+    .top-section > .accordion,
+    .top-section > .card {
+      margin-bottom: 8px;
+    }
+
+    .top-section > :last-child {
+      margin-bottom: 0;
+    }
+
+    .card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 13px 16px;
+      transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
+      box-shadow: var(--shadow);
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-hover);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .card-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-name {
+      font-size: 0.88rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+      color: var(--text);
+    }
+
+    .card-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.67rem;
+      color: var(--text-sub);
+      font-weight: 300;
+      line-height: 1.45;
+    }
+
+    .section-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .accordion {
+      border-radius: var(--radius);
+      border: 1px solid var(--border-light);
+      background: var(--bg-card);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .accordion-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 16px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      color: inherit;
+    }
+
+    .accordion-trigger:hover,
+    .accordion.open .accordion-trigger {
+      background: var(--accent-dim);
+    }
+
+    .accordion-trigger-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .accordion-title {
+      font-size: 0.88rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+      color: var(--text);
+    }
+
+    .accordion-quip {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.67rem;
+      color: var(--text-sub);
+      font-style: italic;
+      font-weight: 300;
+    }
+
+    .accordion-chevron {
+      font-size: 0.65rem;
+      color: var(--text-sub);
+      transition: transform 0.25s ease, color 0.15s ease;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .accordion.open .accordion-chevron {
+      transform: rotate(180deg);
+      color: var(--accent);
+    }
+
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease;
+    }
+
+    .accordion.open .accordion-content {
+      max-height: 1200px;
+    }
+
+    .accordion-inner {
+      padding: 4px 10px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .inner-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 12px;
+      border-radius: 7px;
+      border: 1px solid var(--border-light);
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .inner-card:hover {
+      background: rgba(231,59,66,0.07);
+      border-color: var(--accent);
+    }
+
+    .inner-card-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .inner-card-name {
+      font-size: 0.84rem;
+      font-weight: 500;
+      margin-bottom: 1px;
+      color: var(--text);
+    }
+
+    .inner-card-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.63rem;
+      color: var(--text-sub);
+      font-weight: 300;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 56px;
+    }
+
+    footer a {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--text-sub);
+      letter-spacing: 0.06em;
+    }
   </style>
 </head>
+
 <body>
-  <div class="logo">${icons.link}</div>
-  <h1><span>chmp</span>.me</h1>
-  <p class="tagline">Fast, simple URL shortening.</p>
-  <a href="/admin" class="cta">${icons.logOut} Admin Login</a>
-  <p class="footer">Powered by Cloudflare Workers</p>
+
+  <header class="header">
+    <div class="wordmark">chmp.me</div>
+    <div class="tagline">not a startup, but made from scratch</div>
+  </header>
+
+  <div class="container">
+
+    <div class="top-section">
+      <div class="section-label">Chomp Chomp</div>
+
+      <div class="accordion open" id="acc-chomp">
+        <button class="accordion-trigger" onclick="toggleAccordion('acc-chomp')">
+          <div class="accordion-trigger-body">
+            <div class="accordion-title">Chom.ps</div>
+            <div class="accordion-quip">Recipes, stories, tools, and everything else.</div>
+          </div>
+          <span class="accordion-chevron">&#9660;</span>
+        </button>
+        <div class="accordion-content">
+          <div class="accordion-inner">
+            <a href="https://chom.ps" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Home</div>
+                <div class="inner-card-sub">chom.ps</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/recipes" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Recipes</div>
+                <div class="inner-card-sub">Recipes · Baking · Cooking</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/stories" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Stories</div>
+                <div class="inner-card-sub">Writing · Essays · Notes</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/lexicon" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Lexicon</div>
+                <div class="inner-card-sub">Terms · Definitions · Fragments</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/reading-list" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Reading List</div>
+                <div class="inner-card-sub">Books · Essays · References</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/playlists" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Playlists</div>
+                <div class="inner-card-sub">Listening · Mood · Sound</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <a href="https://ps.chom.ps" class="card">
+        <div class="card-body">
+          <div class="card-name">.ps</div>
+          <div class="card-sub">Postscript. (Cookies, etc. &hellip; and so on.)</div>
+        </div>
+      </a>
+
+      <a href="https://chompchomp.cc" class="card">
+        <div class="card-body">
+          <div class="card-name">Store</div>
+          <div class="card-sub">chompchomp.cc</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="lab-divider"></div>
+
+    <div class="section-heading">
+      <div class="section-heading-title">Kitchen Counter</div>
+      <div class="section-heading-sub">Tools, ingredients, and other useful things.</div>
+    </div>
+
+    <div class="section-group">
+
+      <div class="accordion" id="acc-everyday">
+        <button class="accordion-trigger" onclick="toggleAccordion('acc-everyday')">
+          <div class="accordion-trigger-body">
+            <div class="accordion-title">Measuring Spoons</div>
+            <div class="accordion-quip">Small tools, used often.</div>
+          </div>
+          <span class="accordion-chevron">&#9660;</span>
+        </button>
+        <div class="accordion-content">
+          <div class="accordion-inner">
+            <a href="https://chom.ps/tools/color" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Color</div>
+                <div class="inner-card-sub">Palettes · Conversions · Contrast</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/tools/convert" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Convert</div>
+                <div class="inner-card-sub">Length · Volume · Weight</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/tools/currency" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Currency</div>
+                <div class="inner-card-sub">Exchange Rates · ECB</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/tools/randomness" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Randomness</div>
+                <div class="inner-card-sub">Numbers · Dice · Strings</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/tools/text" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Text</div>
+                <div class="inner-card-sub">Transform · Sort · Clean</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/tools/time" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Time</div>
+                <div class="inner-card-sub">Timestamps · Timezones</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/tools/weather" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Weather</div>
+                <div class="inner-card-sub">Temperature · Comfort</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion" id="acc-dev">
+        <button class="accordion-trigger" onclick="toggleAccordion('acc-dev')">
+          <div class="accordion-trigger-body">
+            <div class="accordion-title">Spatulas</div>
+            <div class="accordion-quip">Developing, folding, and such.</div>
+          </div>
+          <span class="accordion-chevron">&#9660;</span>
+        </button>
+        <div class="accordion-content">
+          <div class="accordion-inner">
+            <a href="https://chom.ps/tools/encode" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Encode</div>
+                <div class="inner-card-sub">URI · Base64 · Hash</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/tools/whois" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Whois</div>
+                <div class="inner-card-sub">IP · Owner · Location</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/tools/subnet" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Subnet</div>
+                <div class="inner-card-sub">CIDR · Network Range</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion" id="acc-ipsum">
+        <button class="accordion-trigger" onclick="toggleAccordion('acc-ipsum')">
+          <div class="accordion-trigger-body">
+            <div class="accordion-title">Mixing Bowls</div>
+            <div class="accordion-quip">Words for when you need words.</div>
+          </div>
+          <span class="accordion-chevron">&#9660;</span>
+        </button>
+        <div class="accordion-content">
+          <div class="accordion-inner">
+            <a href="https://chom.ps/ipsum/baking" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Baking Ipsum</div>
+                <div class="inner-card-sub">Southern sayings · Baking wisdom</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/ipsum/inferno" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Inferno Ipsum</div>
+                <div class="inner-card-sub">Dante · Divine Comedy</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/ipsum/epic" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Epic Ipsum</div>
+                <div class="inner-card-sub">Homer · Hesiod</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/ipsum/nautical" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Nautical Ipsum</div>
+                <div class="inner-card-sub">Moby-Dick · Maritime lore</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/ipsum/philosophy" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Philosophy Ipsum</div>
+                <div class="inner-card-sub">&#381;i&#382;ek · Marx · Hegel</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/ipsum/shakespeare" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Shakespeare Love &amp; Hate</div>
+                <div class="inner-card-sub">Declarations · Insults · Collision</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/ipsum/dadjokes" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Dad Jokes Ipsum</div>
+                <div class="inner-card-sub">Normal · Random · Ionesco</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion" id="acc-apps">
+        <button class="accordion-trigger" onclick="toggleAccordion('acc-apps')">
+          <div class="accordion-trigger-body">
+            <div class="accordion-title">Spice Rack</div>
+            <div class="accordion-quip">Things that do things.</div>
+          </div>
+          <span class="accordion-chevron">&#9660;</span>
+        </button>
+        <div class="accordion-content">
+          <div class="accordion-inner">
+            <a href="https://chom.ps/chompy" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Chompy</div>
+                <div class="inner-card-sub">A Render project</div>
+              </div>
+            </a>
+            <a href="https://clip.chmp.me/" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Clipper</div>
+                <div class="inner-card-sub">clip.chmp.me</div>
+              </div>
+            </a>
+            <a href="https://cooling.chmp.me/" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Cooling</div>
+                <div class="inner-card-sub">cooling.chmp.me</div>
+              </div>
+            </a>
+            <a href="https://library.chompchomp.cc/" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Library</div>
+                <div class="inner-card-sub">library.chompchomp.cc</div>
+              </div>
+            </a>
+            <a href="https://recipes.chompchomp.cc/" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Recipe Box</div>
+                <div class="inner-card-sub">recipes.chompchomp.cc</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/send" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Send</div>
+                <div class="inner-card-sub">A fly.io project</div>
+              </div>
+            </a>
+            <a href="https://chmp.me" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">URL Shortener</div>
+                <div class="inner-card-sub">chmp.me</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <a href="https://chom.ps">chom.ps</a>
+  </footer>
+
+  <script>
+    function toggleAccordion(id) {
+      document.getElementById(id).classList.toggle('open');
+    }
+  </script>
+
 </body>
 </html>`;
       return htmlResponse(html);
