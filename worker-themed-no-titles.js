@@ -2539,6 +2539,7 @@ export default {
       cursor: pointer;
       text-align: left;
       color: inherit;
+      font-family: inherit;
       font-size: inherit;
       line-height: 1.7;
       transition: background-color 0.2s;
