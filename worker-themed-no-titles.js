@@ -2504,7 +2504,7 @@ export default {
 
     .card-name {
       font-size: 0.95em;
-      font-weight: 400;
+      font-weight: 500;
       margin-bottom: 2px;
       color: var(--color-text);
     }
@@ -2539,6 +2539,7 @@ export default {
       cursor: pointer;
       text-align: left;
       color: inherit;
+      font-family: inherit;
       font-size: inherit;
       line-height: 1.7;
       transition: background-color 0.2s;
@@ -2556,7 +2557,7 @@ export default {
 
     .accordion-title {
       font-size: 0.95em;
-      font-weight: 400;
+      font-weight: 500;
       margin-bottom: 2px;
       color: var(--color-text);
     }
