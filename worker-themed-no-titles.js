@@ -2918,8 +2918,8 @@ export default {
           <div class="accordion-inner">
             <a href="https://chom.ps/tools/ipsum.html" class="inner-card">
               <div class="inner-card-body">
-                <div class="inner-card-name">Words</div>
-                <div class="inner-card-sub">All the Ipsums · Not Lorem ipsum dolor sit amet</div>
+                <div class="inner-card-name">Latin</div>
+                <div class="inner-card-sub">All the Ipsums · But not Lorem ipsum dolor sit amet</div>
               </div>
             </a>
             <a href="https://chom.ps/tools/baking.html" class="inner-card">
