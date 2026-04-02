@@ -2416,6 +2416,7 @@ export default {
     }
 
     .hero {
+      max-width: 540px;
       width: 100%;
       display: block;
       margin: 0 auto;
@@ -2891,6 +2892,12 @@ export default {
               <div class="inner-card-body">
                 <div class="inner-card-name">Subnet</div>
                 <div class="inner-card-sub">CIDR · Network Range</div>
+              </div>
+            </a>
+            <a href="https://chom.ps/tools/json" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">JSON</div>
+                <div class="inner-card-sub">Format · Validate · Explore</div>
               </div>
             </a>
           </div>
