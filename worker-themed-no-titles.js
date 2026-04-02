@@ -2353,36 +2353,34 @@ export default {
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="chmp.me">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --accent: #e73b42;
-      --accent-dim: rgba(231,59,66,0.10);
-      --bg: #faf9f7;
-      --bg-card: #ffffff;
-      --border: #e8e4de;
-      --border-light: #f0ece6;
-      --text: #1c1917;
-      --text-muted: #78716c;
-      --text-sub: #a8a29e;
-      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
-      --shadow-hover: 0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.08);
-      --radius: 10px;
+      --color-bg: #fdfdfd;
+      --color-text: #353535;
+      --color-accent: #e73b42;
+      --color-accent-hover: #d12d34;
+      --color-card-bg: #f5f5f5;
+      --color-border: #e0e0e0;
+      --color-text-muted: #7d7d7d;
+      --color-text-light: #9d9d9d;
+      --accent-dim: rgba(231,59,66,0.07);
+      --radius: 8px;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #141210;
-        --bg-card: #1e1b18;
-        --border: #2c2825;
-        --border-light: #26221f;
-        --text: #e8e4de;
-        --text-muted: #a8a29e;
-        --text-sub: #6b655f;
-        --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
-        --shadow-hover: 0 2px 8px rgba(0,0,0,0.4), 0 8px 32px rgba(0,0,0,0.3);
-        --accent-dim: rgba(231,59,66,0.13);
+        --color-bg: #231f1f;
+        --color-text: #d9d4d4;
+        --color-accent: #ff6b7a;
+        --color-accent-hover: #ff8590;
+        --color-card-bg: #2b2626;
+        --color-border: #3b3636;
+        --color-text-muted: #b9b4b4;
+        --color-text-light: #948f8f;
+        --accent-dim: rgba(255,107,122,0.08);
       }
     }
 
@@ -2393,16 +2391,17 @@ export default {
     }
 
     html {
-      font-size: 17px;
+      font-size: 16px;
       -webkit-font-smoothing: antialiased;
     }
 
     body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      background-color: var(--color-bg);
+      color: var(--color-text);
       min-height: 100vh;
       padding: 48px 20px 80px;
+      line-height: 1.7;
     }
 
     a {
@@ -2428,11 +2427,11 @@ export default {
     }
 
     .section-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.58rem;
-      letter-spacing: 0.18em;
+      font-size: 0.65em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--text-muted);
+      font-weight: 600;
+      color: var(--color-text-muted);
       margin-bottom: 12px;
       padding-left: 2px;
     }
@@ -2443,25 +2442,23 @@ export default {
     }
 
     .section-heading-title {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.58rem;
-      letter-spacing: 0.18em;
+      font-size: 0.65em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--text-muted);
+      font-weight: 600;
+      color: var(--color-text-muted);
       margin-bottom: 6px;
     }
 
     .section-heading-sub {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.68rem;
-      color: var(--text-muted);
-      font-weight: 300;
+      font-size: 0.85em;
+      color: var(--color-text-muted);
       line-height: 1.5;
     }
 
     .lab-divider {
       height: 1px;
-      background: var(--border-light);
+      background: var(--color-border);
       margin: 26px 0 18px;
     }
 
@@ -2482,18 +2479,22 @@ export default {
       display: flex;
       align-items: center;
       gap: 12px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
+      background-color: var(--color-card-bg);
+      border: 1px solid var(--color-border);
       border-radius: var(--radius);
       padding: 13px 16px;
-      transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
-      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
     }
 
     .card:hover {
-      box-shadow: var(--shadow-hover);
-      border-color: var(--accent);
-      transform: translateY(-1px);
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .card:hover {
+        box-shadow: 0 4px 12px rgba(255,107,122,0.2);
+      }
     }
 
     .card-body {
@@ -2502,17 +2503,15 @@ export default {
     }
 
     .card-name {
-      font-size: 0.88rem;
+      font-size: 0.95em;
       font-weight: 500;
       margin-bottom: 2px;
-      color: var(--text);
+      color: var(--color-text);
     }
 
     .card-sub {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.67rem;
-      color: var(--text-sub);
-      font-weight: 300;
+      font-size: 0.8em;
+      color: var(--color-text-light);
       line-height: 1.45;
     }
 
@@ -2524,9 +2523,8 @@ export default {
 
     .accordion {
       border-radius: var(--radius);
-      border: 1px solid var(--border-light);
-      background: var(--bg-card);
-      box-shadow: var(--shadow);
+      border: 1px solid var(--color-border);
+      background-color: var(--color-card-bg);
       overflow: hidden;
     }
 
@@ -2541,11 +2539,12 @@ export default {
       cursor: pointer;
       text-align: left;
       color: inherit;
+      transition: background-color 0.2s;
     }
 
     .accordion-trigger:hover,
     .accordion.open .accordion-trigger {
-      background: var(--accent-dim);
+      background-color: var(--accent-dim);
     }
 
     .accordion-trigger-body {
@@ -2554,23 +2553,21 @@ export default {
     }
 
     .accordion-title {
-      font-size: 0.88rem;
+      font-size: 0.95em;
       font-weight: 500;
       margin-bottom: 2px;
-      color: var(--text);
+      color: var(--color-text);
     }
 
     .accordion-quip {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.67rem;
-      color: var(--text-muted);
+      font-size: 0.8em;
+      color: var(--color-text-muted);
       font-style: italic;
-      font-weight: 300;
     }
 
     .accordion-chevron {
       font-size: 0.65rem;
-      color: var(--text-sub);
+      color: var(--color-text-light);
       transition: transform 0.25s ease, color 0.15s ease;
       line-height: 1;
       flex-shrink: 0;
@@ -2578,7 +2575,7 @@ export default {
 
     .accordion.open .accordion-chevron {
       transform: rotate(180deg);
-      color: var(--accent);
+      color: var(--color-accent);
     }
 
     .accordion-content {
@@ -2603,14 +2600,21 @@ export default {
       align-items: center;
       gap: 12px;
       padding: 9px 12px;
-      border-radius: 7px;
-      border: 1px solid var(--border-light);
-      transition: background 0.15s, border-color 0.15s;
+      border-radius: 6px;
+      border: 1px solid var(--color-border);
+      transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
     }
 
     .inner-card:hover {
-      background: rgba(231,59,66,0.07);
-      border-color: var(--accent);
+      background-color: var(--accent-dim);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .inner-card:hover {
+        box-shadow: 0 2px 8px rgba(255,107,122,0.15);
+      }
     }
 
     .inner-card-body {
@@ -2619,17 +2623,15 @@ export default {
     }
 
     .inner-card-name {
-      font-size: 0.84rem;
+      font-size: 0.9em;
       font-weight: 500;
       margin-bottom: 1px;
-      color: var(--text);
+      color: var(--color-text);
     }
 
     .inner-card-sub {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.63rem;
-      color: var(--text-sub);
-      font-weight: 300;
+      font-size: 0.75em;
+      color: var(--color-text-light);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -2637,7 +2639,7 @@ export default {
 
     .nested-accordion {
       border-radius: 6px;
-      border: 1px solid var(--border-light);
+      border: 1px solid var(--color-border);
       overflow: hidden;
     }
 
@@ -2652,31 +2654,32 @@ export default {
       cursor: pointer;
       text-align: left;
       color: inherit;
+      transition: background-color 0.2s;
     }
 
     .nested-trigger:hover,
     .nested-accordion.open .nested-trigger {
-      background: var(--accent-dim);
+      background-color: var(--accent-dim);
     }
 
     .nested-trigger-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.62rem;
+      font-size: 0.65em;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--text-muted);
+      font-weight: 600;
+      color: var(--color-text-muted);
     }
 
     .nested-chevron {
       font-size: 0.55rem;
-      color: var(--text-sub);
+      color: var(--color-text-light);
       transition: transform 0.2s ease, color 0.15s ease;
       flex-shrink: 0;
     }
 
     .nested-accordion.open .nested-chevron {
       transform: rotate(180deg);
-      color: var(--accent);
+      color: var(--color-accent);
     }
 
     .nested-content {
@@ -2702,10 +2705,14 @@ export default {
     }
 
     footer a {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.68rem;
-      color: var(--text-sub);
-      letter-spacing: 0.06em;
+      font-size: 0.8em;
+      color: var(--color-text-light);
+      letter-spacing: 0.04em;
+      transition: color 0.2s;
+    }
+
+    footer a:hover {
+      color: var(--color-accent);
     }
   </style>
 </head>
