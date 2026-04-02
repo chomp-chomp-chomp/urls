@@ -2723,8 +2723,8 @@ export default {
 
   <header class="header">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://ik.imagekit.io/chompchomp/chompme%20index%20dark">
-      <img class="hero" src="https://ik.imagekit.io/chompchomp/chompme%20index%20light" alt="chmp.me">
+      <source media="(prefers-color-scheme: dark)" srcset="https://ik.imagekit.io/chompchomp/chompme%20index%20dark.jpg">
+      <img class="hero" src="https://ik.imagekit.io/chompchomp/chompme%20index%20light.jpg">
     </picture>
   </header>
 
@@ -2737,7 +2737,7 @@ export default {
         <button class="accordion-trigger" onclick="toggleAccordion('acc-chomp')">
           <div class="accordion-trigger-body">
             <div class="accordion-title">Chom.ps</div>
-            <div class="accordion-quip">Recipes, stories, tools, and everything else.</div>
+            <div class="accordion-quip">Recipes, stories, and such.</div>
           </div>
           <span class="accordion-chevron">&#9660;</span>
         </button>
@@ -2789,10 +2789,10 @@ export default {
         </div>
       </div>
 
-      <a href="https://chompchomp.cc" class="card">
+      <a href="https://chom.ps/store" class="card">
         <div class="card-body">
-          <div class="card-name">Store</div>
-          <div class="card-sub">chompchomp.cc</div>
+          <div class="card-name">Chomp Chomp</div>
+          <div class="card-sub">Small batches · Made to order · In small ovens</div>
         </div>
       </a>
     </div>
@@ -2801,7 +2801,7 @@ export default {
 
     <div class="section-heading">
       <div class="section-heading-title">Kitchen Counter</div>
-      <div class="section-heading-sub">Tools, ingredients, and other useful things.</div>
+      <div class="section-heading-sub">Bakeware, utensils, and other useful things.</div>
     </div>
 
     <div class="section-group">
@@ -2818,8 +2818,8 @@ export default {
           <div class="accordion-inner">
             <a href="https://chom.ps/tools/index.html" class="inner-card">
               <div class="inner-card-body">
-                <div class="inner-card-name">Index</div>
-                <div class="inner-card-sub">All tools</div>
+                <div class="inner-card-name">Spoon Set</div>
+                <div class="inner-card-sub">All the tools</div>
               </div>
             </a>
             <a href="https://chom.ps/tools/color.html" class="inner-card">
@@ -2872,7 +2872,7 @@ export default {
         <button class="accordion-trigger" onclick="toggleAccordion('acc-dev')">
           <div class="accordion-trigger-body">
             <div class="accordion-title">Spatulas</div>
-            <div class="accordion-quip">Developing, folding, and such.</div>
+            <div class="accordion-quip">Stirring, folding, and mixing.</div>
           </div>
           <span class="accordion-chevron">&#9660;</span>
         </button>
@@ -2918,8 +2918,8 @@ export default {
           <div class="accordion-inner">
             <a href="https://chom.ps/tools/ipsum.html" class="inner-card">
               <div class="inner-card-body">
-                <div class="inner-card-name">Index</div>
-                <div class="inner-card-sub">All ipsum generators</div>
+                <div class="inner-card-name">Words</div>
+                <div class="inner-card-sub">All the Ipsums · Not Lorem ipsum dolor sit amet</div>
               </div>
             </a>
             <a href="https://chom.ps/tools/baking.html" class="inner-card">
@@ -2978,7 +2978,7 @@ export default {
         </button>
         <div class="accordion-content">
           <div class="accordion-inner">
-            <a href="https://chom.ps/chompy" class="inner-card">
+            <a href="https://dl.chmp.me/login" class="inner-card">
               <div class="inner-card-body">
                 <div class="inner-card-name">Chompy</div>
                 <div class="inner-card-sub">A Render project</div>
@@ -2987,37 +2987,37 @@ export default {
             <a href="https://clip.chmp.me/" class="inner-card">
               <div class="inner-card-body">
                 <div class="inner-card-name">Clipper</div>
-                <div class="inner-card-sub">clip.chmp.me</div>
+                <div class="inner-card-sub">Save the news</div>
               </div>
             </a>
             <a href="https://cooling.chmp.me/" class="inner-card">
               <div class="inner-card-body">
                 <div class="inner-card-name">Cooling</div>
-                <div class="inner-card-sub">cooling.chmp.me</div>
+                <div class="inner-card-sub">Not in the oven</div>
               </div>
             </a>
-            <a href="https://library.chompchomp.cc/" class="inner-card">
+            <a href="https://library.chom.ps/" class="inner-card">
               <div class="inner-card-body">
                 <div class="inner-card-name">Library</div>
-                <div class="inner-card-sub">library.chompchomp.cc</div>
+                <div class="inner-card-sub">Chomp OPAC</div>
               </div>
             </a>
-            <a href="https://recipes.chompchomp.cc/" class="inner-card">
+            <a href="https://recipes.chom.ps/" class="inner-card">
               <div class="inner-card-body">
                 <div class="inner-card-name">Recipe Box</div>
-                <div class="inner-card-sub">recipes.chompchomp.cc</div>
+                <div class="inner-card-sub">IYKYK</div>
               </div>
             </a>
-            <a href="https://chom.ps/send" class="inner-card">
+            <a href="https://fly.io/" class="inner-card">
               <div class="inner-card-body">
                 <div class="inner-card-name">Send</div>
                 <div class="inner-card-sub">A fly.io project</div>
               </div>
             </a>
-            <a href="https://chmp.me" class="inner-card">
+            <a href="https://chmp.me/admin" class="inner-card">
               <div class="inner-card-body">
                 <div class="inner-card-name">URL Shortener</div>
-                <div class="inner-card-sub">chmp.me</div>
+                <div class="inner-card-sub">Share the chmp</div>
               </div>
             </a>
           </div>
