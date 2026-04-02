@@ -2539,6 +2539,7 @@ export default {
       cursor: pointer;
       text-align: left;
       color: inherit;
+      line-height: 1.7;
       transition: background-color 0.2s;
     }
 
@@ -2623,14 +2624,14 @@ export default {
     }
 
     .inner-card-name {
-      font-size: 0.9em;
+      font-size: 0.95em;
       font-weight: 500;
       margin-bottom: 1px;
       color: var(--color-text);
     }
 
     .inner-card-sub {
-      font-size: 0.75em;
+      font-size: 0.8em;
       color: var(--color-text-light);
       white-space: nowrap;
       overflow: hidden;
