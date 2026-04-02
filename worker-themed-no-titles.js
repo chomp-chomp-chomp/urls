@@ -2554,7 +2554,7 @@ export default {
     }
 
     .accordion-title {
-      font-size: 0.95em;
+      font-size: 1.05em;
       font-weight: 500;
       margin-bottom: 2px;
       color: var(--color-text);
@@ -2624,14 +2624,14 @@ export default {
     }
 
     .inner-card-name {
-      font-size: 0.95em;
+      font-size: 0.85em;
       font-weight: 500;
       margin-bottom: 1px;
       color: var(--color-text);
     }
 
     .inner-card-sub {
-      font-size: 0.8em;
+      font-size: 0.72em;
       color: var(--color-text-light);
       white-space: nowrap;
       overflow: hidden;
