@@ -2391,7 +2391,7 @@ export default {
     }
 
     html {
-      font-size: 16px;
+      font-size: 17px;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -2919,7 +2919,7 @@ export default {
           <div class="accordion-inner">
             <a href="https://chom.ps/tools/ipsum.html" class="inner-card">
               <div class="inner-card-body">
-                <div class="inner-card-name">Latin</div>
+                <div class="inner-card-name">Latin &amp; Whatnot</div>
                 <div class="inner-card-sub">All the Ipsums · But not Lorem ipsum dolor sit amet</div>
               </div>
             </a>
@@ -2979,6 +2979,12 @@ export default {
         </button>
         <div class="accordion-content">
           <div class="accordion-inner">
+            <a href="https://summit.chmp.me" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Summit</div>
+                <div class="inner-card-sub">It Happens</div>
+              </div>
+            </a>
             <a href="https://dl.chmp.me/login" class="inner-card">
               <div class="inner-card-body">
                 <div class="inner-card-name">Chompy</div>
