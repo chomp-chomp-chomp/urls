@@ -2979,16 +2979,10 @@ export default {
         </button>
         <div class="accordion-content">
           <div class="accordion-inner">
-            <a href="https://summit.chmp.me" class="inner-card">
-              <div class="inner-card-body">
-                <div class="inner-card-name">Summit</div>
-                <div class="inner-card-sub">It Happens</div>
-              </div>
-            </a>
             <a href="https://dl.chmp.me/login" class="inner-card">
               <div class="inner-card-body">
-                <div class="inner-card-name">Chompy</div>
-                <div class="inner-card-sub">A Render project</div>
+                <div class="inner-card-name">Chompy DL</div>
+                <div class="inner-card-sub">Save the Media (Render)</div>
               </div>
             </a>
             <a href="https://clip.chmp.me/" class="inner-card">
@@ -3018,7 +3012,13 @@ export default {
             <a href="https://fly.io/" class="inner-card">
               <div class="inner-card-body">
                 <div class="inner-card-name">Send</div>
-                <div class="inner-card-sub">A fly.io project</div>
+                <div class="inner-card-sub">The Newsletter Experience (fly.io)</div>
+              </div>
+            </a>
+            <a href="https://summit.chmp.me" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Summit</div>
+                <div class="inner-card-sub">It Happens</div>
               </div>
             </a>
             <a href="https://chmp.me/admin" class="inner-card">
