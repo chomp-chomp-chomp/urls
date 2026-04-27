@@ -2391,7 +2391,7 @@ export default {
     }
 
     html {
-      font-size: 16px;
+      font-size: 17px;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -2919,7 +2919,7 @@ export default {
           <div class="accordion-inner">
             <a href="https://chom.ps/tools/ipsum.html" class="inner-card">
               <div class="inner-card-body">
-                <div class="inner-card-name">Latin</div>
+                <div class="inner-card-name">Latin &amp; Whatnot</div>
                 <div class="inner-card-sub">All the Ipsums · But not Lorem ipsum dolor sit amet</div>
               </div>
             </a>
@@ -2981,8 +2981,8 @@ export default {
           <div class="accordion-inner">
             <a href="https://dl.chmp.me/login" class="inner-card">
               <div class="inner-card-body">
-                <div class="inner-card-name">Chompy</div>
-                <div class="inner-card-sub">A Render project</div>
+                <div class="inner-card-name">Chompy DL</div>
+                <div class="inner-card-sub">Save the Media (Render)</div>
               </div>
             </a>
             <a href="https://clip.chmp.me/" class="inner-card">
@@ -3012,7 +3012,13 @@ export default {
             <a href="https://fly.io/" class="inner-card">
               <div class="inner-card-body">
                 <div class="inner-card-name">Send</div>
-                <div class="inner-card-sub">A fly.io project</div>
+                <div class="inner-card-sub">The Newsletter Experience (fly.io)</div>
+              </div>
+            </a>
+            <a href="https://summit.chmp.me" class="inner-card">
+              <div class="inner-card-body">
+                <div class="inner-card-name">Summit</div>
+                <div class="inner-card-sub">It Happens</div>
               </div>
             </a>
             <a href="https://chmp.me/admin" class="inner-card">
