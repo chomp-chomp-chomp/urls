@@ -33,7 +33,7 @@ const TRACKING_PARAMS = new Set([
 ]);
 
 // ── Change these to match your deployment ──────────────────────────────────
-const DEFAULT_WORKER_URL = “https://chomp-urls.YOUR-SUBDOMAIN.workers.dev”;
+const DEFAULT_WORKER_URL = “https://chomp-urls.logjam.workers.dev”;
 // ──────────────────────────────────────────────────────────────────────────
 
 function cleanUrl(raw) {
