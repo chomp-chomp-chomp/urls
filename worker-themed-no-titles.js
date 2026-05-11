@@ -288,6 +288,497 @@ shorten() {
 </html>`;
 
 // ---------------------------------------------------------------------------
+// URL Cleaner / Stripper page HTML
+// ---------------------------------------------------------------------------
+const urlCleanerHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Strip</title>
+  <link rel="icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon.ico">
+  <link rel="apple-touch-icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: #0a0a0a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Mono', 'Fira Mono', 'Courier New', monospace;
+      padding: 2rem;
+    }
+    .container { width: 100%; max-width: 680px; }
+    .header { margin-bottom: 2.5rem; }
+    .title-row { display: flex; align-items: flex-start; justify-content: space-between; }
+    .title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.8rem, 8vw, 5rem);
+      letter-spacing: 0.04em;
+      color: #f0f0f0;
+      line-height: 0.9;
+      margin: 0 0 0.5rem 0;
+    }
+    .title span { color: #fe0032; }
+    .settings-toggle {
+      background: transparent;
+      border: 1px solid #222;
+      border-radius: 3px;
+      color: #444;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.6rem;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: all 0.15s;
+    }
+    .settings-toggle:hover { border-color: #444; color: #888; }
+    .settings-toggle.active { border-color: #fe0032; color: #fe0032; }
+    .settings-panel {
+      background: #0f0f0f;
+      border: 1px solid #1e1e1e;
+      border-radius: 4px;
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+      animation: fadeUp 0.15s ease;
+    }
+    .settings-row { display: flex; flex-direction: column; gap: 0.75rem; }
+    .field-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #444;
+      margin-bottom: 0.3rem;
+    }
+    .settings-input {
+      width: 100%;
+      background: #141414;
+      border: 1px solid #2a2a2a;
+      border-radius: 3px;
+      color: #c8c8c8;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.5rem 0.7rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .settings-input:focus { border-color: #444; }
+    .settings-input::placeholder { color: #2e2e2e; }
+    .subtitle { font-size: 0.72rem; color: #555; letter-spacing: 0.12em; text-transform: uppercase; margin: 0; }
+    .divider { width: 2rem; height: 2px; background: #fe0032; margin: 1rem 0; }
+    textarea {
+      width: 100%;
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 4px;
+      color: #c8c8c8;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      padding: 1rem;
+      resize: none;
+      outline: none;
+      transition: border-color 0.15s;
+      line-height: 1.6;
+      min-height: 110px;
+      margin-bottom: 0.5rem;
+    }
+    textarea::placeholder { color: #333; }
+    textarea:focus { border-color: #444; }
+    .paste-hint { font-size: 0.65rem; color: #333; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.75rem; text-align: right; }
+    .clean-btn {
+      width: 100%;
+      background: #fe0032;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      letter-spacing: 0.1em;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.08s;
+    }
+    .clean-btn:hover { background: #cc0028; }
+    .clean-btn:active { transform: scale(0.99); }
+    .clean-btn:disabled { background: #2a0010; color: #550015; cursor: default; }
+    .result-box {
+      margin-top: 1.5rem;
+      border: 1px solid #1e1e1e;
+      border-radius: 4px;
+      overflow: hidden;
+      animation: fadeUp 0.2s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .result-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #444;
+      background: #111;
+      padding: 0.5rem 0.85rem;
+      border-bottom: 1px solid #1e1e1e;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .result-label .status { color: #4ade80; font-size: 0.6rem; letter-spacing: 0.12em; }
+    .result-url { background: #0d0d0d; padding: 1rem; color: #e0e0e0; font-size: 0.78rem; line-height: 1.7; word-break: break-all; user-select: all; }
+    .result-actions {
+      background: #111;
+      padding: 0.6rem 0.85rem;
+      border-top: 1px solid #1e1e1e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .removed-list { font-size: 0.62rem; color: #555; letter-spacing: 0.04em; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .removed-list .count { color: #fe0032; margin-right: 0.4em; }
+    .action-btns { display: flex; gap: 0.5rem; flex-shrink: 0; }
+    .copy-btn, .shorten-btn {
+      background: transparent;
+      border: 1px solid #2a2a2a;
+      border-radius: 3px;
+      color: #888;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .copy-btn:hover { border-color: #555; color: #ccc; }
+    .copy-btn.copied { border-color: #4ade80; color: #4ade80; }
+    .shorten-btn { border-color: #2a1a00; color: #664400; }
+    .shorten-btn:hover { border-color: #cc7700; color: #cc7700; }
+    .shorten-btn:disabled { opacity: 0.4; cursor: default; }
+    .shorten-section { border-top: 1px solid #1a1a1a; background: #0d0d0d; animation: fadeUp 0.2s ease; }
+    .custom-code-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.85rem; border-bottom: 1px solid #151515; }
+    .custom-code-label { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: #333; white-space: nowrap; flex-shrink: 0; }
+    .custom-code-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #222;
+      color: #c8c8c8;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.3rem;
+      outline: none;
+      transition: border-color 0.15s;
+      min-width: 0;
+    }
+    .custom-code-input:focus { border-bottom-color: #444; }
+    .custom-code-input::placeholder { color: #2a2a2a; }
+    .short-result { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.75rem 0.85rem; flex-wrap: wrap; }
+    .short-url-text { font-size: 0.8rem; color: #cc7700; word-break: break-all; flex: 1; min-width: 0; }
+    .shorten-error { padding: 0.6rem 0.85rem; font-size: 0.7rem; color: #fe0032; }
+    .no-api-hint { font-size: 0.62rem; color: #333; letter-spacing: 0.06em; padding: 0 0.85rem 0.6rem; }
+    .no-api-hint span { color: #fe0032; cursor: pointer; text-decoration: underline; }
+    .error-note { font-size: 0.7rem; color: #fe0032; padding: 0.75rem 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="title-row">
+        <h1 class="title">URL<span>.</span><br>STRIP</h1>
+        <button class="settings-toggle" id="settingsToggle">&#9881; Settings</button>
+      </div>
+      <div class="divider"></div>
+      <p class="subtitle">Strip tracking &middot; Shorten via chom.pm</p>
+    </div>
+
+    <div class="settings-panel" id="settingsPanel" style="display:none">
+      <div class="settings-row">
+        <div>
+          <div class="field-label">Worker URL</div>
+          <input class="settings-input" id="workerUrlInput" placeholder="https://chom.pm" spellcheck="false">
+        </div>
+        <div>
+          <div class="field-label">API Key</div>
+          <input class="settings-input" id="apiKeyInput" type="password" placeholder="your-api-key" spellcheck="false">
+        </div>
+      </div>
+    </div>
+
+    <textarea id="urlInput" placeholder="Paste a URL here&#8230;" spellcheck="false"></textarea>
+    <div class="paste-hint">&#8984; + Enter to clean</div>
+    <button class="clean-btn" id="cleanBtn" disabled>Strip It</button>
+
+    <div class="result-box" id="resultBox" style="display:none">
+      <div class="result-label">
+        <span>Cleaned URL</span>
+        <span class="status" id="resultStatus"></span>
+      </div>
+      <div class="error-note" id="resultError" style="display:none"></div>
+      <div class="result-url" id="resultUrl" style="display:none"></div>
+      <div class="result-actions" id="resultActions" style="display:none">
+        <div class="removed-list" id="removedList"></div>
+        <div class="action-btns">
+          <button class="copy-btn" id="copyBtn">Copy</button>
+          <button class="shorten-btn" id="shortenBtn" style="display:none">Shorten</button>
+        </div>
+      </div>
+      <div class="no-api-hint" id="noApiHint" style="display:none">
+        No API key set &#8212; <span id="openSettingsLink">add one in settings</span> to enable shortening.
+      </div>
+      <div class="shorten-section" id="shortenSection" style="display:none">
+        <div class="custom-code-row">
+          <span class="custom-code-label">Short code</span>
+          <input class="custom-code-input" id="customCodeInput" placeholder="optional &#8212; leave blank for random" spellcheck="false">
+        </div>
+        <div class="shorten-error" id="shortenErrorEl" style="display:none"></div>
+        <div class="short-result" id="shortResult" style="display:none">
+          <span class="short-url-text" id="shortUrlText"></span>
+          <button class="copy-btn" id="shortCopyBtn">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var TRACKING_PARAMS = new Set([
+      "utm_source","utm_medium","utm_campaign","utm_term","utm_content",
+      "utm_id","utm_source_platform","utm_campaign_id","utm_creative_format",
+      "utm_marketing_tactic",
+      "_kx","uid","campaign_id",
+      "fbclid","fb_action_ids","fb_action_types","fb_source","fb_ref",
+      "gclid","gclsrc","dclid","gbraid","wbraid",
+      "msclkid",
+      "twclid",
+      "hsa_acc","hsa_cam","hsa_grp","hsa_ad","hsa_src","hsa_tgt",
+      "hsa_kw","hsa_mt","hsa_net","hsa_ver","hsa_la",
+      "mc_cid","mc_eid",
+      "mkt_tok",
+      "messageId",
+      "ref","referrer","source","campaign","trk","trkinfo",
+      "igshid","s_cid","ncid","cid","eid","mid",
+      "clickid","click_id","track","tracking",
+      "affiliate","aff_id","partner_id",
+      "zanpid","origin","sxsrf"
+    ]);
+
+    function cleanUrl(raw) {
+      var trimmed = raw.trim();
+      if (!trimmed) return { cleaned: "", removed: [] };
+      var url;
+      try { url = new URL(trimmed); } catch(e) { return { cleaned: trimmed, removed: [], error: "Not a valid URL" }; }
+      var removed = [];
+      var toDelete = [];
+      url.searchParams.forEach(function(v, key) {
+        if (TRACKING_PARAMS.has(key.toLowerCase())) { toDelete.push(key); removed.push(key); }
+      });
+      toDelete.forEach(function(k) { url.searchParams.delete(k); });
+      var cleaned = url.toString();
+      if (url.searchParams.size === 0) cleaned = cleaned.replace(/[?]$/, "");
+      return { cleaned: cleaned, removed: removed };
+    }
+
+    async function shortenUrl(cleanedUrl, workerUrl, apiKey, customCode) {
+      var endpoint = workerUrl.replace(/[/]+$/, "") + "/api/shorten";
+      var body = { url: cleanedUrl };
+      if (customCode.trim()) body.shortCode = customCode.trim();
+      var res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
+        body: JSON.stringify(body)
+      });
+      var data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "HTTP " + res.status);
+      return data.shortUrl;
+    }
+
+    var result = null;
+    var shortUrl = null;
+    var shortening = false;
+    var shortenError = null;
+
+    function g(id) { return document.getElementById(id); }
+    function show(el) { el.style.display = ""; }
+    function hide(el) { el.style.display = "none"; }
+
+    // Default worker URL to same origin
+    g("workerUrlInput").value = window.location.origin;
+
+    function updateCleanBtn() {
+      g("cleanBtn").disabled = !g("urlInput").value.trim();
+    }
+
+    function renderResult() {
+      if (!result) { hide(g("resultBox")); return; }
+      show(g("resultBox"));
+
+      if (result.error) {
+        g("resultError").textContent = result.error;
+        show(g("resultError"));
+        hide(g("resultUrl"));
+        hide(g("resultActions"));
+        hide(g("noApiHint"));
+        hide(g("shortenSection"));
+        g("resultStatus").textContent = "";
+        return;
+      }
+
+      hide(g("resultError"));
+      g("resultUrl").textContent = result.cleaned;
+      show(g("resultUrl"));
+      show(g("resultActions"));
+
+      if (result.removed.length === 0) {
+        g("resultStatus").textContent = "✓ Already clean";
+      } else {
+        g("resultStatus").textContent = result.removed.length + " param" + (result.removed.length !== 1 ? "s" : "") + " removed";
+      }
+
+      var rl = g("removedList");
+      if (result.removed.length > 0) {
+        rl.innerHTML = "<span class='count'>—</span>" + result.removed.join(", ");
+      } else {
+        rl.innerHTML = "<span style='color:#333'>No tracking params found</span>";
+      }
+
+      var canShorten = !!(result.cleaned && !result.error);
+      if (canShorten) { show(g("shortenBtn")); } else { hide(g("shortenBtn")); }
+
+      var apiKey = g("apiKeyInput").value;
+      if (canShorten && !apiKey.trim() && !shortUrl) {
+        show(g("noApiHint"));
+      } else {
+        hide(g("noApiHint"));
+      }
+
+      if (shortUrl || shortenError || shortening) {
+        show(g("shortenSection"));
+        if (shortenError) {
+          g("shortenErrorEl").textContent = "Error: " + shortenError;
+          show(g("shortenErrorEl"));
+        } else {
+          hide(g("shortenErrorEl"));
+        }
+        if (shortUrl) {
+          g("shortUrlText").textContent = shortUrl;
+          show(g("shortResult"));
+        } else {
+          hide(g("shortResult"));
+        }
+      } else {
+        hide(g("shortenSection"));
+      }
+    }
+
+    function doClean() {
+      var input = g("urlInput").value;
+      if (!input.trim()) return;
+      result = cleanUrl(input);
+      shortUrl = null;
+      shortenError = null;
+      g("copyBtn").textContent = "Copy";
+      g("copyBtn").classList.remove("copied");
+      g("shortCopyBtn").textContent = "Copy";
+      g("shortCopyBtn").classList.remove("copied");
+      g("customCodeInput").value = "";
+      renderResult();
+    }
+
+    g("settingsToggle").addEventListener("click", function() {
+      var panel = g("settingsPanel");
+      var toggle = g("settingsToggle");
+      var isHidden = panel.style.display === "none";
+      panel.style.display = isHidden ? "" : "none";
+      toggle.classList.toggle("active", isHidden);
+      toggle.textContent = isHidden ? "✕ Close" : "⚙ Settings";
+    });
+
+    g("urlInput").addEventListener("input", updateCleanBtn);
+    g("urlInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) doClean();
+    });
+    g("urlInput").addEventListener("paste", function(e) {
+      var pasted = e.clipboardData.getData("text");
+      if (pasted.trim()) {
+        setTimeout(function() {
+          g("urlInput").value = pasted.trim();
+          updateCleanBtn();
+          result = cleanUrl(pasted.trim());
+          shortUrl = null;
+          shortenError = null;
+          g("copyBtn").textContent = "Copy";
+          g("copyBtn").classList.remove("copied");
+          renderResult();
+        }, 0);
+      }
+    });
+
+    g("cleanBtn").addEventListener("click", doClean);
+
+    g("copyBtn").addEventListener("click", function() {
+      if (!result || !result.cleaned) return;
+      navigator.clipboard.writeText(result.cleaned).then(function() {
+        g("copyBtn").textContent = "✓ Copied";
+        g("copyBtn").classList.add("copied");
+        setTimeout(function() { g("copyBtn").textContent = "Copy"; g("copyBtn").classList.remove("copied"); }, 2000);
+      });
+    });
+
+    g("shortCopyBtn").addEventListener("click", function() {
+      if (!shortUrl) return;
+      navigator.clipboard.writeText(shortUrl).then(function() {
+        g("shortCopyBtn").textContent = "✓ Copied";
+        g("shortCopyBtn").classList.add("copied");
+        setTimeout(function() { g("shortCopyBtn").textContent = "Copy"; g("shortCopyBtn").classList.remove("copied"); }, 2000);
+      });
+    });
+
+    function openSettings() {
+      var panel = g("settingsPanel");
+      var toggle = g("settingsToggle");
+      panel.style.display = "";
+      toggle.classList.add("active");
+      toggle.textContent = "✕ Close";
+      setTimeout(function() { g("apiKeyInput").focus(); }, 100);
+    }
+
+    g("openSettingsLink").addEventListener("click", openSettings);
+
+    g("shortenBtn").addEventListener("click", async function() {
+      if (!result || !result.cleaned || shortening) return;
+      var apiKey = g("apiKeyInput").value;
+      if (!apiKey.trim()) { openSettings(); return; }
+      shortening = true;
+      shortenError = null;
+      shortUrl = null;
+      renderResult();
+      try {
+        var workerUrl = g("workerUrlInput").value || window.location.origin;
+        var customCode = g("customCodeInput").value;
+        shortUrl = await shortenUrl(result.cleaned, workerUrl, apiKey, customCode);
+        shortenError = null;
+      } catch(err) {
+        shortenError = err.message;
+        shortUrl = null;
+      } finally {
+        shortening = false;
+        renderResult();
+      }
+    });
+  </script>
+</body>
+</html>`;
+
+// ---------------------------------------------------------------------------
 // Admin panel HTML
 // ---------------------------------------------------------------------------
 const adminHtml = `<!DOCTYPE html>
@@ -3062,6 +3553,10 @@ export default {
 </body>
 </html>`;
       return htmlResponse(html);
+    }
+
+    if (path === '/clean') {
+      return htmlResponse(urlCleanerHtml);
     }
 
     const shortCode = path.substring(1);
