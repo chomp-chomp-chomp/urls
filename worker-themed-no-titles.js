@@ -556,6 +556,27 @@ const urlCleanerHtml = `<!DOCTYPE html>
     .short-url-text { font-size: 14px; font-weight: 500; color: var(--color-accent); word-break: break-all; flex: 1; min-width: 0; }
     .error-note { padding: 12px 16px; font-size: 13px; color: #dc2626; }
     @media (prefers-color-scheme: dark) { .error-note { color: #f87171; } }
+    .btn-trace { background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); }
+    .btn-trace:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-bg); }
+    .btn-trace.loading { opacity: 0.6; cursor: default; transform: none; }
+    .peek-section { border-top: 1px solid var(--color-border); }
+    .peek-chain { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .peek-hop { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; }
+    .peek-hop-num { font-size: 11px; font-weight: 600; color: var(--color-text-muted); width: 20px; flex-shrink: 0; padding-top: 2px; }
+    .peek-status { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 99px; flex-shrink: 0; }
+    .peek-status-3xx { color: #92400e; background: #fef3c7; }
+    .peek-status-2xx { color: #166534; background: #dcfce7; }
+    .peek-status-err { color: #7f1d1d; background: #fef2f2; }
+    @media (prefers-color-scheme: dark) {
+      .peek-status-3xx { color: #fbbf24; background: rgba(251,191,36,0.12); }
+      .peek-status-2xx { color: #4ade80; background: rgba(74,222,128,0.12); }
+      .peek-status-err { color: #f87171; background: rgba(248,113,113,0.1); }
+    }
+    .peek-hop-url { word-break: break-all; color: var(--color-text); flex: 1; }
+    .peek-hop.is-final .peek-hop-url { font-weight: 600; color: var(--color-accent); }
+    .peek-msg { padding: 12px 16px; font-size: 13px; color: var(--color-text-muted); }
+    .peek-error { padding: 12px 16px; font-size: 13px; color: #dc2626; }
+    @media (prefers-color-scheme: dark) { .peek-error { color: #f87171; } }
   </style>
 </head>
 <body>
@@ -602,6 +623,7 @@ const urlCleanerHtml = `<!DOCTYPE html>
         <div class="action-btns">
           <button class="btn-sm btn-copy" id="copyBtn">Copy</button>
           <button class="btn-sm btn-shorten" id="shortenBtn" style="display:none">Shorten</button>
+          <button class="btn-sm btn-trace" id="traceBtn" style="display:none">Trace</button>
         </div>
       </div>
       <div class="no-api-hint" id="noApiHint" style="display:none">
@@ -617,6 +639,9 @@ const urlCleanerHtml = `<!DOCTYPE html>
           <span class="short-url-text" id="shortUrlText"></span>
           <button class="btn-sm btn-copy" id="shortCopyBtn">Copy</button>
         </div>
+      </div>
+      <div class="peek-section" id="peekSection" style="display:none">
+        <div id="peekContent"></div>
       </div>
     </div>
   </div>
@@ -673,10 +698,22 @@ const urlCleanerHtml = `<!DOCTYPE html>
       return data.shortUrl;
     }
 
+    async function peekUrl(targetUrl, workerUrl) {
+      var base = workerUrl.replace(/[/]+$/, "");
+      var endpoint = base + "/api/peek?url=" + encodeURIComponent(targetUrl);
+      var res = await fetch(endpoint, { method: "GET" });
+      var data = await res.json();
+      if (!data.success) throw new Error(data.error || "HTTP " + res.status);
+      return data;
+    }
+
     var result = null;
     var shortUrl = null;
     var shortening = false;
     var shortenError = null;
+    var peekData = null;
+    var peeking = false;
+    var peekError = null;
 
     function g(id) { return document.getElementById(id); }
     function show(el) { el.style.display = ""; }
@@ -699,6 +736,7 @@ const urlCleanerHtml = `<!DOCTYPE html>
         hide(g("resultActions"));
         hide(g("noApiHint"));
         hide(g("shortenSection"));
+        hide(g("peekSection"));
         hide(g("resultStatus"));
         return;
       }
@@ -750,6 +788,57 @@ const urlCleanerHtml = `<!DOCTYPE html>
       } else {
         hide(g("shortenSection"));
       }
+
+      if (canShorten) { show(g("traceBtn")); } else { hide(g("traceBtn")); }
+      renderPeek();
+    }
+
+    function statusClass(s) {
+      if (!s || s === 0) return "peek-status-err";
+      if (s >= 300 && s < 400) return "peek-status-3xx";
+      if (s >= 200 && s < 300) return "peek-status-2xx";
+      return "peek-status-err";
+    }
+
+    function renderPeek() {
+      var section = g("peekSection");
+      var content = g("peekContent");
+      if (!peekData && !peeking && !peekError) { hide(section); return; }
+      show(section);
+
+      if (peeking) {
+        content.innerHTML = "<div class='peek-msg'>Tracing redirects…</div>";
+        return;
+      }
+      if (peekError) {
+        content.innerHTML = "<div class='peek-error'>Trace failed: " + peekError + "</div>";
+        return;
+      }
+
+      var chain = peekData.chain;
+      if (!chain || chain.length === 0) {
+        content.innerHTML = "<div class='peek-msg'>No redirect data returned.</div>";
+        return;
+      }
+      if (chain.length === 1 && chain[0].status >= 200 && chain[0].status < 300) {
+        content.innerHTML = "<div class='peek-msg'>No redirects — direct link (HTTP " + chain[0].status + ")</div>";
+        return;
+      }
+
+      var html = "<div class='peek-chain'>";
+      chain.forEach(function(hop, i) {
+        var isFinal = (i === chain.length - 1);
+        var sc = statusClass(hop.status);
+        var label = hop.status ? String(hop.status) : (hop.note === "loop" ? "LOOP" : "ERR");
+        var url = hop.url.length > 80 ? hop.url.slice(0, 80) + "…" : hop.url;
+        html += "<div class='peek-hop" + (isFinal ? " is-final" : "") + "'>";
+        html += "<span class='peek-hop-num'>" + (i + 1) + "</span>";
+        html += "<span class='peek-status " + sc + "'>" + label + "</span>";
+        html += "<span class='peek-hop-url'>" + url + "</span>";
+        html += "</div>";
+      });
+      html += "</div>";
+      content.innerHTML = html;
     }
 
     function doClean() {
@@ -758,6 +847,9 @@ const urlCleanerHtml = `<!DOCTYPE html>
       result = cleanUrl(input);
       shortUrl = null;
       shortenError = null;
+      peekData = null;
+      peekError = null;
+      peeking = false;
       g("copyBtn").textContent = "Copy";
       g("copyBtn").classList.remove("copied");
       g("shortCopyBtn").textContent = "Copy";
@@ -788,6 +880,9 @@ const urlCleanerHtml = `<!DOCTYPE html>
           result = cleanUrl(pasted.trim());
           shortUrl = null;
           shortenError = null;
+          peekData = null;
+          peekError = null;
+          peeking = false;
           g("copyBtn").textContent = "Copy";
           g("copyBtn").classList.remove("copied");
           renderResult();
@@ -845,6 +940,27 @@ const urlCleanerHtml = `<!DOCTYPE html>
       } finally {
         shortening = false;
         renderResult();
+      }
+    });
+
+    g("traceBtn").addEventListener("click", async function() {
+      if (!result || !result.cleaned || peeking) return;
+      peeking = true;
+      peekData = null;
+      peekError = null;
+      g("traceBtn").classList.add("loading");
+      g("traceBtn").disabled = true;
+      renderPeek();
+      try {
+        var workerUrl = g("workerUrlInput").value || window.location.origin;
+        peekData = await peekUrl(result.cleaned, workerUrl);
+      } catch(err) {
+        peekError = err.message;
+      } finally {
+        peeking = false;
+        g("traceBtn").classList.remove("loading");
+        g("traceBtn").disabled = false;
+        renderPeek();
       }
     });
   </script>
@@ -2774,6 +2890,10 @@ async function handleApi(request, env, path) {
     return handleApiShorten(request, env);
   }
 
+  if (path === '/api/peek' && request.method === 'GET') {
+    return handleApiPeek(request);
+  }
+
   return jsonResponse({ error: 'Not found' }, 404);
 }
 
@@ -2834,6 +2954,83 @@ async function handleApiShorten(request, env) {
     });
   } catch (error) {
     return jsonResponse({ success: false, error: 'Invalid request', message: error.message }, 400);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// API: GET /api/peek?url= — follow redirect chain server-side
+// ---------------------------------------------------------------------------
+async function handleApiPeek(request) {
+  try {
+    const requestUrl = new URL(request.url);
+    const targetUrl = requestUrl.searchParams.get('url');
+    if (!targetUrl) {
+      return jsonResponse({ success: false, error: 'url parameter is required' }, 400);
+    }
+
+    let decodedUrl;
+    try { decodedUrl = decodeURIComponent(targetUrl); } catch(_) { decodedUrl = targetUrl; }
+
+    if (!isValidUrl(decodedUrl)) {
+      return jsonResponse({ success: false, error: 'Invalid URL. Must start with http:// or https://' }, 400);
+    }
+
+    const MAX_HOPS = 10;
+    const chain = [];
+    const seen = new Set();
+    let currentUrl = decodedUrl;
+    const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+
+    for (let hop = 0; hop < MAX_HOPS; hop++) {
+      if (seen.has(currentUrl)) {
+        chain.push({ url: currentUrl, status: 0, note: 'loop' });
+        break;
+      }
+      seen.add(currentUrl);
+
+      let response;
+      try {
+        response = await fetch(currentUrl, {
+          method: 'GET',
+          redirect: 'manual',
+          headers: {
+            'User-Agent': UA,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+          },
+        });
+      } catch (fetchErr) {
+        chain.push({ url: currentUrl, status: 0, note: 'fetch_error' });
+        return jsonResponse({ success: false, error: 'Network error: ' + fetchErr.message, chain });
+      }
+
+      const status = response.status;
+      if (response.body) { try { await response.body.cancel(); } catch(_) {} }
+      chain.push({ url: currentUrl, status });
+
+      if (status >= 300 && status < 400) {
+        const location = response.headers.get('Location');
+        if (!location) break;
+        let nextUrl;
+        try { nextUrl = new URL(location, currentUrl).toString(); } catch(_) { break; }
+        const proto = new URL(nextUrl).protocol;
+        if (proto !== 'http:' && proto !== 'https:') {
+          chain.push({ url: nextUrl, status: 0, note: 'non_http' });
+          break;
+        }
+        currentUrl = nextUrl;
+      } else {
+        break;
+      }
+    }
+
+    const last = chain[chain.length - 1];
+    if (last && last.status >= 300 && last.status < 400) {
+      return jsonResponse({ success: false, error: 'Too many redirects (limit: ' + MAX_HOPS + ')', chain });
+    }
+    return jsonResponse({ success: true, finalUrl: last ? last.url : decodedUrl, chain });
+  } catch (error) {
+    return jsonResponse({ success: false, error: 'Internal error: ' + error.message }, 500);
   }
 }
 
