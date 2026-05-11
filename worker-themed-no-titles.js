@@ -298,252 +298,324 @@ const urlCleanerHtml = `<!DOCTYPE html>
   <title>URL Strip</title>
   <link rel="icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon.ico">
   <link rel="apple-touch-icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e73b42">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="chmp.me">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-bg: #fdfdfd;
+      --color-text: #353535;
+      --color-accent: #e73b42;
+      --color-accent-hover: #d12d34;
+      --color-surface: #f5f5f5;
+      --color-border: #e0e0e0;
+      --color-text-muted: #7d7d7d;
+      --color-text-light: #9d9d9d;
+      --font-primary: 'Inter', sans-serif;
+      --font-fallback: 'Source Sans 3', sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #231f1f;
+        --color-text: #d9d4d4;
+        --color-accent: #ff6b7a;
+        --color-accent-hover: #ff8590;
+        --color-surface: #2b2626;
+        --color-border: #3b3636;
+        --color-text-muted: #b9b4b4;
+        --color-text-light: #948f8f;
+      }
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
+      font-family: var(--font-primary), var(--font-fallback), -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
       min-height: 100vh;
-      background: #0a0a0a;
       display: flex;
-      align-items: center;
       justify-content: center;
-      font-family: 'DM Mono', 'Fira Mono', 'Courier New', monospace;
-      padding: 2rem;
+      align-items: flex-start;
+      padding: 40px 20px;
+      line-height: 1.7;
     }
-    .container { width: 100%; max-width: 680px; }
-    .header { margin-bottom: 2.5rem; }
-    .title-row { display: flex; align-items: flex-start; justify-content: space-between; }
-    .title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(2.8rem, 8vw, 5rem);
-      letter-spacing: 0.04em;
-      color: #f0f0f0;
-      line-height: 0.9;
-      margin: 0 0 0.5rem 0;
+    .container {
+      background: var(--color-surface);
+      border-radius: 12px;
+      border: 1px solid var(--color-border);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      max-width: 680px;
+      width: 100%;
+      padding: 40px;
     }
-    .title span { color: #fe0032; }
+    .page-header { margin-bottom: 28px; }
+    .title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    h1 { font-size: 26px; font-weight: 700; color: var(--color-text); line-height: 1.2; }
+    h1 span { color: var(--color-accent); }
+    .subtitle { font-size: 13px; color: var(--color-text-muted); margin-top: 6px; }
     .settings-toggle {
       background: transparent;
-      border: 1px solid #222;
-      border-radius: 3px;
-      color: #444;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 0.35rem 0.6rem;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      color: var(--color-text-muted);
+      font-family: var(--font-primary), sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 12px;
       cursor: pointer;
-      margin-top: 0.5rem;
-      transition: all 0.15s;
+      transition: border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+      width: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
-    .settings-toggle:hover { border-color: #444; color: #888; }
-    .settings-toggle.active { border-color: #fe0032; color: #fe0032; }
+    .settings-toggle:hover { border-color: var(--color-accent); color: var(--color-accent); transform: none; }
+    .settings-toggle.active { border-color: var(--color-accent); color: var(--color-accent); background: rgba(231,59,66,0.06); }
+    @media (prefers-color-scheme: dark) {
+      .settings-toggle.active { background: rgba(255,107,122,0.08); }
+    }
     .settings-panel {
-      background: #0f0f0f;
-      border: 1px solid #1e1e1e;
-      border-radius: 4px;
-      padding: 1rem;
-      margin-bottom: 1.25rem;
-      animation: fadeUp 0.15s ease;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
     }
-    .settings-row { display: flex; flex-direction: column; gap: 0.75rem; }
-    .field-label {
-      font-size: 0.6rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #444;
-      margin-bottom: 0.3rem;
+    .settings-row { display: flex; flex-direction: column; gap: 16px; }
+    .form-group { margin-bottom: 20px; }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--color-text);
+      font-weight: 500;
+      font-size: 14px;
     }
-    .settings-input {
+    .field-hint { font-size: 12px; color: var(--color-text-muted); margin-top: 5px; }
+    input[type="text"], input[type="password"], textarea {
       width: 100%;
-      background: #141414;
-      border: 1px solid #2a2a2a;
-      border-radius: 3px;
-      color: #c8c8c8;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.75rem;
-      padding: 0.5rem 0.7rem;
+      padding: 10px 12px;
+      border: 2px solid var(--color-border);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: var(--font-primary), var(--font-fallback), sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      transition: border-color 0.2s;
       outline: none;
-      transition: border-color 0.15s;
     }
-    .settings-input:focus { border-color: #444; }
-    .settings-input::placeholder { color: #2e2e2e; }
-    .subtitle { font-size: 0.72rem; color: #555; letter-spacing: 0.12em; text-transform: uppercase; margin: 0; }
-    .divider { width: 2rem; height: 2px; background: #fe0032; margin: 1rem 0; }
-    textarea {
+    input[type="text"]:focus, input[type="password"]:focus, textarea:focus { border-color: var(--color-accent); }
+    input::placeholder, textarea::placeholder { color: var(--color-text-light); }
+    textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+    .paste-hint { font-size: 12px; color: var(--color-text-light); text-align: right; margin-top: 6px; margin-bottom: 16px; }
+    button {
       width: 100%;
-      background: #111;
-      border: 1px solid #2a2a2a;
-      border-radius: 4px;
-      color: #c8c8c8;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.8rem;
-      padding: 1rem;
-      resize: none;
-      outline: none;
-      transition: border-color 0.15s;
-      line-height: 1.6;
-      min-height: 110px;
-      margin-bottom: 0.5rem;
-    }
-    textarea::placeholder { color: #333; }
-    textarea:focus { border-color: #444; }
-    .paste-hint { font-size: 0.65rem; color: #333; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.75rem; text-align: right; }
-    .clean-btn {
-      width: 100%;
-      background: #fe0032;
-      color: #fff;
+      padding: 12px;
+      background: var(--color-accent);
+      color: white;
       border: none;
-      border-radius: 4px;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.3rem;
-      letter-spacing: 0.1em;
-      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: var(--font-primary), var(--font-fallback), sans-serif;
       cursor: pointer;
-      transition: background 0.15s, transform 0.08s;
+      transition: background 0.2s, transform 0.2s, opacity 0.2s;
     }
-    .clean-btn:hover { background: #cc0028; }
-    .clean-btn:active { transform: scale(0.99); }
-    .clean-btn:disabled { background: #2a0010; color: #550015; cursor: default; }
+    button:hover { background: var(--color-accent-hover); transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    button:disabled { opacity: 0.4; cursor: default; transform: none; }
     .result-box {
-      margin-top: 1.5rem;
-      border: 1px solid #1e1e1e;
-      border-radius: 4px;
+      margin-top: 24px;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
       overflow: hidden;
-      animation: fadeUp 0.2s ease;
     }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .result-label {
-      font-size: 0.6rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: #444;
-      background: #111;
-      padding: 0.5rem 0.85rem;
-      border-bottom: 1px solid #1e1e1e;
+    .result-header {
+      padding: 10px 16px;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text-muted);
     }
-    .result-label .status { color: #4ade80; font-size: 0.6rem; letter-spacing: 0.12em; }
-    .result-url { background: #0d0d0d; padding: 1rem; color: #e0e0e0; font-size: 0.78rem; line-height: 1.7; word-break: break-all; user-select: all; }
-    .result-actions {
-      background: #111;
-      padding: 0.6rem 0.85rem;
-      border-top: 1px solid #1e1e1e;
+    .status-badge {
+      font-size: 12px;
+      font-weight: 600;
+      color: #16a34a;
+      background: #dcfce7;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .status-badge { color: #4ade80; background: rgba(74,222,128,0.12); }
+    }
+    .result-url {
+      padding: 14px 16px;
+      font-size: 14px;
+      line-height: 1.7;
+      word-break: break-all;
+      color: var(--color-text);
+      user-select: all;
+      cursor: text;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .result-footer {
+      padding: 10px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.75rem;
+      gap: 12px;
       flex-wrap: wrap;
     }
-    .removed-list { font-size: 0.62rem; color: #555; letter-spacing: 0.04em; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-    .removed-list .count { color: #fe0032; margin-right: 0.4em; }
-    .action-btns { display: flex; gap: 0.5rem; flex-shrink: 0; }
-    .copy-btn, .shorten-btn {
-      background: transparent;
-      border: 1px solid #2a2a2a;
-      border-radius: 3px;
-      color: #888;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 0.35rem 0.75rem;
-      cursor: pointer;
-      transition: all 0.15s;
+    .removed-tags { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; min-width: 0; }
+    .removed-tag {
+      font-size: 11px;
+      font-weight: 500;
+      background: rgba(231,59,66,0.08);
+      color: var(--color-accent);
+      padding: 2px 7px;
+      border-radius: 99px;
+      border: 1px solid rgba(231,59,66,0.2);
+    }
+    @media (prefers-color-scheme: dark) {
+      .removed-tag { background: rgba(255,107,122,0.1); border-color: rgba(255,107,122,0.25); }
+    }
+    .no-params-text { font-size: 13px; color: var(--color-text-light); }
+    .action-btns { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-sm {
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      width: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
       white-space: nowrap;
     }
-    .copy-btn:hover { border-color: #555; color: #ccc; }
-    .copy-btn.copied { border-color: #4ade80; color: #4ade80; }
-    .shorten-btn { border-color: #2a1a00; color: #664400; }
-    .shorten-btn:hover { border-color: #cc7700; color: #cc7700; }
-    .shorten-btn:disabled { opacity: 0.4; cursor: default; }
-    .shorten-section { border-top: 1px solid #1a1a1a; background: #0d0d0d; animation: fadeUp 0.2s ease; }
-    .custom-code-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.85rem; border-bottom: 1px solid #151515; }
-    .custom-code-label { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: #333; white-space: nowrap; flex-shrink: 0; }
+    .btn-copy { background: var(--color-accent); color: white; border: none; }
+    .btn-copy:hover { background: var(--color-accent-hover); }
+    .btn-copy.copied { background: #16a34a; transform: none; }
+    .btn-shorten {
+      background: var(--color-bg);
+      color: var(--color-text-muted);
+      border: 1px solid var(--color-border);
+    }
+    .btn-shorten:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-bg); }
+    .no-api-hint {
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--color-text-muted);
+      border-top: 1px solid var(--color-border);
+    }
+    .no-api-hint .link { color: var(--color-accent); cursor: pointer; text-decoration: underline; }
+    .shorten-section { border-top: 1px solid var(--color-border); }
+    .custom-code-row {
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-surface);
+    }
+    .custom-code-label { font-size: 13px; font-weight: 500; color: var(--color-text-muted); white-space: nowrap; flex-shrink: 0; }
     .custom-code-input {
       flex: 1;
-      background: transparent;
-      border: none;
-      border-bottom: 1px solid #222;
-      color: #c8c8c8;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.75rem;
-      padding: 0.2rem 0.3rem;
+      padding: 6px 10px;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: var(--font-primary), sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
       outline: none;
-      transition: border-color 0.15s;
+      transition: border-color 0.2s;
       min-width: 0;
+      width: auto;
     }
-    .custom-code-input:focus { border-bottom-color: #444; }
-    .custom-code-input::placeholder { color: #2a2a2a; }
-    .short-result { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.75rem 0.85rem; flex-wrap: wrap; }
-    .short-url-text { font-size: 0.8rem; color: #cc7700; word-break: break-all; flex: 1; min-width: 0; }
-    .shorten-error { padding: 0.6rem 0.85rem; font-size: 0.7rem; color: #fe0032; }
-    .no-api-hint { font-size: 0.62rem; color: #333; letter-spacing: 0.06em; padding: 0 0.85rem 0.6rem; }
-    .no-api-hint span { color: #fe0032; cursor: pointer; text-decoration: underline; }
-    .error-note { font-size: 0.7rem; color: #fe0032; padding: 0.75rem 0.85rem; }
+    .custom-code-input:focus { border-color: var(--color-accent); }
+    .custom-code-input::placeholder { color: var(--color-text-light); }
+    .shorten-error-box {
+      padding: 10px 16px;
+      font-size: 13px;
+      color: #dc2626;
+      background: #fef2f2;
+      border-bottom: 1px solid #fecaca;
+    }
+    @media (prefers-color-scheme: dark) {
+      .shorten-error-box { color: #f87171; background: #450a0a; border-color: #7f1d1d; }
+    }
+    .short-result { padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .short-url-text { font-size: 14px; font-weight: 500; color: var(--color-accent); word-break: break-all; flex: 1; min-width: 0; }
+    .error-note { padding: 12px 16px; font-size: 13px; color: #dc2626; }
+    @media (prefers-color-scheme: dark) { .error-note { color: #f87171; } }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
+    <div class="page-header">
       <div class="title-row">
-        <h1 class="title">URL<span>.</span><br>STRIP</h1>
+        <h1>URL<span>.</span>STRIP</h1>
         <button class="settings-toggle" id="settingsToggle">&#9881; Settings</button>
       </div>
-      <div class="divider"></div>
-      <p class="subtitle">Strip tracking &middot; Shorten via chom.pm</p>
+      <p class="subtitle">Remove tracking parameters &middot; Optionally shorten via chom.pm</p>
     </div>
 
     <div class="settings-panel" id="settingsPanel" style="display:none">
       <div class="settings-row">
         <div>
-          <div class="field-label">Worker URL</div>
-          <input class="settings-input" id="workerUrlInput" placeholder="https://chom.pm" spellcheck="false">
+          <label for="workerUrlInput">Worker URL</label>
+          <input type="text" id="workerUrlInput" placeholder="https://chom.pm" spellcheck="false">
         </div>
         <div>
-          <div class="field-label">API Key</div>
-          <input class="settings-input" id="apiKeyInput" type="password" placeholder="your-api-key" spellcheck="false">
+          <label for="apiKeyInput">API Key</label>
+          <input type="password" id="apiKeyInput" placeholder="your-api-key" spellcheck="false">
+          <div class="field-hint">Required for shortening. Cleaning works without it.</div>
         </div>
       </div>
     </div>
 
-    <textarea id="urlInput" placeholder="Paste a URL here&#8230;" spellcheck="false"></textarea>
-    <div class="paste-hint">&#8984; + Enter to clean</div>
-    <button class="clean-btn" id="cleanBtn" disabled>Strip It</button>
+    <div class="form-group">
+      <label for="urlInput">URL to clean</label>
+      <textarea id="urlInput" placeholder="Paste a URL here&#8230;" spellcheck="false"></textarea>
+      <div class="paste-hint">&#8984; / Ctrl + Enter to clean</div>
+    </div>
+
+    <button id="cleanBtn" disabled>Strip It</button>
 
     <div class="result-box" id="resultBox" style="display:none">
-      <div class="result-label">
+      <div class="result-header">
         <span>Cleaned URL</span>
-        <span class="status" id="resultStatus"></span>
+        <span class="status-badge" id="resultStatus" style="display:none"></span>
       </div>
       <div class="error-note" id="resultError" style="display:none"></div>
       <div class="result-url" id="resultUrl" style="display:none"></div>
-      <div class="result-actions" id="resultActions" style="display:none">
-        <div class="removed-list" id="removedList"></div>
+      <div class="result-footer" id="resultActions" style="display:none">
+        <div class="removed-tags" id="removedList"></div>
         <div class="action-btns">
-          <button class="copy-btn" id="copyBtn">Copy</button>
-          <button class="shorten-btn" id="shortenBtn" style="display:none">Shorten</button>
+          <button class="btn-sm btn-copy" id="copyBtn">Copy</button>
+          <button class="btn-sm btn-shorten" id="shortenBtn" style="display:none">Shorten</button>
         </div>
       </div>
       <div class="no-api-hint" id="noApiHint" style="display:none">
-        No API key set &#8212; <span id="openSettingsLink">add one in settings</span> to enable shortening.
+        No API key &mdash; <span class="link" id="openSettingsLink">add one in Settings</span> to enable shortening.
       </div>
       <div class="shorten-section" id="shortenSection" style="display:none">
         <div class="custom-code-row">
-          <span class="custom-code-label">Short code</span>
-          <input class="custom-code-input" id="customCodeInput" placeholder="optional &#8212; leave blank for random" spellcheck="false">
+          <span class="custom-code-label">Custom slug</span>
+          <input class="custom-code-input" id="customCodeInput" placeholder="optional &mdash; leave blank for random" spellcheck="false">
         </div>
-        <div class="shorten-error" id="shortenErrorEl" style="display:none"></div>
+        <div class="shorten-error-box" id="shortenErrorEl" style="display:none"></div>
         <div class="short-result" id="shortResult" style="display:none">
           <span class="short-url-text" id="shortUrlText"></span>
-          <button class="copy-btn" id="shortCopyBtn">Copy</button>
+          <button class="btn-sm btn-copy" id="shortCopyBtn">Copy</button>
         </div>
       </div>
     </div>
@@ -610,7 +682,6 @@ const urlCleanerHtml = `<!DOCTYPE html>
     function show(el) { el.style.display = ""; }
     function hide(el) { el.style.display = "none"; }
 
-    // Default worker URL to same origin
     g("workerUrlInput").value = window.location.origin;
 
     function updateCleanBtn() {
@@ -628,7 +699,7 @@ const urlCleanerHtml = `<!DOCTYPE html>
         hide(g("resultActions"));
         hide(g("noApiHint"));
         hide(g("shortenSection"));
-        g("resultStatus").textContent = "";
+        hide(g("resultStatus"));
         return;
       }
 
@@ -637,17 +708,19 @@ const urlCleanerHtml = `<!DOCTYPE html>
       show(g("resultUrl"));
       show(g("resultActions"));
 
+      var statusEl = g("resultStatus");
       if (result.removed.length === 0) {
-        g("resultStatus").textContent = "✓ Already clean";
+        statusEl.textContent = "Already clean";
       } else {
-        g("resultStatus").textContent = result.removed.length + " param" + (result.removed.length !== 1 ? "s" : "") + " removed";
+        statusEl.textContent = result.removed.length + " param" + (result.removed.length !== 1 ? "s" : "") + " removed";
       }
+      show(statusEl);
 
       var rl = g("removedList");
       if (result.removed.length > 0) {
-        rl.innerHTML = "<span class='count'>—</span>" + result.removed.join(", ");
+        rl.innerHTML = result.removed.map(function(p) { return "<span class='removed-tag'>" + p + "</span>"; }).join("");
       } else {
-        rl.innerHTML = "<span style='color:#333'>No tracking params found</span>";
+        rl.innerHTML = "<span class='no-params-text'>No tracking params found</span>";
       }
 
       var canShorten = !!(result.cleaned && !result.error);
