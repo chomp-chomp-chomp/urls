@@ -595,6 +595,33 @@ const urlCleanerHtml = `<!DOCTYPE html>
     .peek-msg { padding: 12px 16px; font-size: 13px; color: var(--color-text-muted); }
     .peek-error { padding: 12px 16px; font-size: 13px; color: #dc2626; }
     @media (prefers-color-scheme: dark) { .peek-error { color: #f87171; } }
+    .peek-cleaned-section {
+      border-top: 1px solid var(--color-border);
+      background: var(--color-surface);
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .peek-cleaned-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-muted); }
+    .peek-cleaned-url { font-size: 13px; word-break: break-all; color: var(--color-text); }
+    .peek-cleaned-removed { display: flex; flex-wrap: wrap; gap: 5px; }
+    .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .label-row label { margin-bottom: 0; }
+    .clear-btn {
+      width: auto;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      background: transparent;
+      color: var(--color-text-muted);
+      border: 1px solid var(--color-border);
+      border-radius: 5px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .clear-btn:hover { border-color: #dc2626; color: #dc2626; background: transparent; transform: none; }
+    @media (prefers-color-scheme: dark) { .clear-btn:hover { border-color: #f87171; color: #f87171; } }
   </style>
 </head>
 <body>
@@ -622,7 +649,10 @@ const urlCleanerHtml = `<!DOCTYPE html>
     </div>
 
     <div class="form-group">
-      <label for="urlInput">URL to clean</label>
+      <div class="label-row">
+        <label for="urlInput">URL to clean</label>
+        <button class="clear-btn" id="clearBtn" style="display:none">Clear</button>
+      </div>
       <textarea id="urlInput" placeholder="Paste a URL here&#8230;" spellcheck="false"></textarea>
       <div class="paste-hint">&#8984; / Ctrl + Enter to clean</div>
     </div>
@@ -740,7 +770,18 @@ const urlCleanerHtml = `<!DOCTYPE html>
     g("workerUrlInput").value = window.location.origin;
 
     function updateCleanBtn() {
-      g("cleanBtn").disabled = !g("urlInput").value.trim();
+      var hasInput = !!g("urlInput").value.trim();
+      g("cleanBtn").disabled = !hasInput;
+      if (hasInput) { show(g("clearBtn")); } else { hide(g("clearBtn")); }
+    }
+
+    function doClear() {
+      g("urlInput").value = "";
+      result = null; shortUrl = null; shortenError = null;
+      peekData = null; peekError = null; peeking = false;
+      g("cleanBtn").disabled = true;
+      hide(g("clearBtn"));
+      renderResult();
     }
 
     function renderResult() {
@@ -937,6 +978,85 @@ const urlCleanerHtml = `<!DOCTYPE html>
 
       content.innerHTML = "";
       content.appendChild(chainDiv);
+
+      // If the final URL still has tracking params, show the cleaned version
+      var finalUrl = peekData.finalUrl;
+      if (finalUrl) {
+        var finalCleaned = cleanUrl(finalUrl);
+        if (finalCleaned.removed.length > 0) {
+          var cleanedSection = document.createElement("div");
+          cleanedSection.className = "peek-cleaned-section";
+
+          var cleanedLabel = document.createElement("div");
+          cleanedLabel.className = "peek-cleaned-label";
+          cleanedLabel.textContent = "Cleaned endpoint";
+          cleanedSection.appendChild(cleanedLabel);
+
+          var cleanedUrl = document.createElement("div");
+          cleanedUrl.className = "peek-cleaned-url";
+          cleanedUrl.textContent = finalCleaned.cleaned;
+          cleanedSection.appendChild(cleanedUrl);
+
+          var removedDiv = document.createElement("div");
+          removedDiv.className = "peek-cleaned-removed";
+          finalCleaned.removed.forEach(function(p) {
+            var tag = document.createElement("span");
+            tag.className = "removed-tag";
+            tag.textContent = p;
+            removedDiv.appendChild(tag);
+          });
+          cleanedSection.appendChild(removedDiv);
+
+          var cleanedActions = document.createElement("div");
+          cleanedActions.className = "peek-hop-actions";
+
+          var copyCleanedBtn = document.createElement("button");
+          copyCleanedBtn.className = "peek-action-btn copy";
+          copyCleanedBtn.textContent = "Copy";
+          (function(btn, url) {
+            btn.addEventListener("click", function() {
+              navigator.clipboard.writeText(url).then(function() {
+                btn.textContent = "✓ Copied"; btn.classList.add("copied");
+                setTimeout(function() { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 2000);
+              });
+            });
+          })(copyCleanedBtn, finalCleaned.cleaned);
+          cleanedActions.appendChild(copyCleanedBtn);
+
+          var shortenCleanedBtn = document.createElement("button");
+          shortenCleanedBtn.className = "peek-action-btn shorten";
+          shortenCleanedBtn.textContent = "Shorten";
+          (function(btn, url) {
+            btn.addEventListener("click", async function() {
+              var apiKey = g("apiKeyInput").value;
+              if (!apiKey.trim()) { openSettings(); return; }
+              btn.disabled = true; btn.textContent = "…";
+              try {
+                var workerUrl = g("workerUrlInput").value || window.location.origin;
+                var s = await shortenUrl(url, workerUrl, apiKey, "");
+                var shortSpan = document.createElement("span");
+                shortSpan.className = "peek-short-url";
+                shortSpan.textContent = s;
+                var copyShortBtn = document.createElement("button");
+                copyShortBtn.className = "peek-action-btn copy";
+                copyShortBtn.textContent = "Copy";
+                copyShortBtn.addEventListener("click", function() {
+                  navigator.clipboard.writeText(s).then(function() {
+                    copyShortBtn.textContent = "✓ Copied"; copyShortBtn.classList.add("copied");
+                    setTimeout(function() { copyShortBtn.textContent = "Copy"; copyShortBtn.classList.remove("copied"); }, 2000);
+                  });
+                });
+                btn.replaceWith(shortSpan);
+                cleanedActions.appendChild(copyShortBtn);
+              } catch(err) { btn.textContent = "Error"; btn.disabled = false; }
+            });
+          })(shortenCleanedBtn, finalCleaned.cleaned);
+          cleanedActions.appendChild(shortenCleanedBtn);
+
+          cleanedSection.appendChild(cleanedActions);
+          content.appendChild(cleanedSection);
+        }
+      }
     }
 
     function doClean() {
@@ -989,6 +1109,7 @@ const urlCleanerHtml = `<!DOCTYPE html>
     });
 
     g("cleanBtn").addEventListener("click", doClean);
+    g("clearBtn").addEventListener("click", doClear);
 
     g("copyBtn").addEventListener("click", function() {
       if (!result || !result.cleaned) return;
