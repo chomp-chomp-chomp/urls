@@ -562,8 +562,8 @@ const urlCleanerHtml = `<!DOCTYPE html>
     .peek-section { border-top: 1px solid var(--color-border); }
     .peek-chain { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
     .peek-hop { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; }
-    .peek-hop-num { font-size: 11px; font-weight: 600; color: var(--color-text-muted); width: 20px; flex-shrink: 0; padding-top: 2px; }
-    .peek-status { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 99px; flex-shrink: 0; }
+    .peek-hop-num { font-size: 11px; font-weight: 600; color: var(--color-text-muted); width: 20px; flex-shrink: 0; padding-top: 3px; }
+    .peek-status { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 99px; flex-shrink: 0; margin-top: 1px; }
     .peek-status-3xx { color: #92400e; background: #fef3c7; }
     .peek-status-2xx { color: #166534; background: #dcfce7; }
     .peek-status-err { color: #7f1d1d; background: #fef2f2; }
@@ -572,8 +572,26 @@ const urlCleanerHtml = `<!DOCTYPE html>
       .peek-status-2xx { color: #4ade80; background: rgba(74,222,128,0.12); }
       .peek-status-err { color: #f87171; background: rgba(248,113,113,0.1); }
     }
-    .peek-hop-url { word-break: break-all; color: var(--color-text); flex: 1; }
+    .peek-hop-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+    .peek-hop-url { word-break: break-all; color: var(--color-text); line-height: 1.5; }
     .peek-hop.is-final .peek-hop-url { font-weight: 600; color: var(--color-accent); }
+    .peek-hop-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .peek-action-btn {
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      width: auto;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .peek-action-btn.copy { background: var(--color-surface); color: var(--color-text-muted); border: 1px solid var(--color-border); }
+    .peek-action-btn.copy:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-surface); transform: none; }
+    .peek-action-btn.copy.copied { color: #16a34a; border-color: #16a34a; background: var(--color-surface); transform: none; }
+    .peek-action-btn.shorten { background: var(--color-accent); color: white; border: none; }
+    .peek-action-btn.shorten:hover { background: var(--color-accent-hover); }
+    .peek-action-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+    .peek-short-url { font-size: 13px; font-weight: 500; color: var(--color-accent); word-break: break-all; }
     .peek-msg { padding: 12px 16px; font-size: 13px; color: var(--color-text-muted); }
     .peek-error { padding: 12px 16px; font-size: 13px; color: #dc2626; }
     @media (prefers-color-scheme: dark) { .peek-error { color: #f87171; } }
@@ -825,20 +843,100 @@ const urlCleanerHtml = `<!DOCTYPE html>
         return;
       }
 
-      var html = "<div class='peek-chain'>";
+      // Build DOM nodes so we can attach event listeners without inline handlers
+      var chainDiv = document.createElement("div");
+      chainDiv.className = "peek-chain";
+
       chain.forEach(function(hop, i) {
         var isFinal = (i === chain.length - 1);
         var sc = statusClass(hop.status);
         var label = hop.status ? String(hop.status) : (hop.note === "loop" ? "LOOP" : "ERR");
-        var url = hop.url.length > 80 ? hop.url.slice(0, 80) + "…" : hop.url;
-        html += "<div class='peek-hop" + (isFinal ? " is-final" : "") + "'>";
-        html += "<span class='peek-hop-num'>" + (i + 1) + "</span>";
-        html += "<span class='peek-status " + sc + "'>" + label + "</span>";
-        html += "<span class='peek-hop-url'>" + url + "</span>";
-        html += "</div>";
+
+        var hopDiv = document.createElement("div");
+        hopDiv.className = "peek-hop" + (isFinal ? " is-final" : "");
+
+        var numEl = document.createElement("span");
+        numEl.className = "peek-hop-num";
+        numEl.textContent = String(i + 1);
+
+        var statusEl = document.createElement("span");
+        statusEl.className = "peek-status " + sc;
+        statusEl.textContent = label;
+
+        var mainDiv = document.createElement("div");
+        mainDiv.className = "peek-hop-main";
+
+        var urlEl = document.createElement("span");
+        urlEl.className = "peek-hop-url";
+        urlEl.textContent = hop.url;
+
+        var actionsDiv = document.createElement("div");
+        actionsDiv.className = "peek-hop-actions";
+
+        // Copy button
+        var copyBtn = document.createElement("button");
+        copyBtn.className = "peek-action-btn copy";
+        copyBtn.textContent = "Copy";
+        (function(btn, url) {
+          btn.addEventListener("click", function() {
+            navigator.clipboard.writeText(url).then(function() {
+              btn.textContent = "✓ Copied";
+              btn.classList.add("copied");
+              setTimeout(function() { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 2000);
+            });
+          });
+        })(copyBtn, hop.url);
+        actionsDiv.appendChild(copyBtn);
+
+        // Shorten button on final hop only
+        if (isFinal) {
+          var shortenPeekBtn = document.createElement("button");
+          shortenPeekBtn.className = "peek-action-btn shorten";
+          shortenPeekBtn.textContent = "Shorten";
+          (function(btn, url) {
+            btn.addEventListener("click", async function() {
+              var apiKey = g("apiKeyInput").value;
+              if (!apiKey.trim()) { openSettings(); return; }
+              btn.disabled = true;
+              btn.textContent = "…";
+              try {
+                var workerUrl = g("workerUrlInput").value || window.location.origin;
+                var s = await shortenUrl(url, workerUrl, apiKey, "");
+                // Replace button with short URL + copy button
+                var shortSpan = document.createElement("span");
+                shortSpan.className = "peek-short-url";
+                shortSpan.textContent = s;
+                var copyShortBtn = document.createElement("button");
+                copyShortBtn.className = "peek-action-btn copy";
+                copyShortBtn.textContent = "Copy";
+                copyShortBtn.addEventListener("click", function() {
+                  navigator.clipboard.writeText(s).then(function() {
+                    copyShortBtn.textContent = "✓ Copied";
+                    copyShortBtn.classList.add("copied");
+                    setTimeout(function() { copyShortBtn.textContent = "Copy"; copyShortBtn.classList.remove("copied"); }, 2000);
+                  });
+                });
+                btn.replaceWith(shortSpan);
+                actionsDiv.appendChild(copyShortBtn);
+              } catch(err) {
+                btn.textContent = "Error: " + err.message;
+                btn.disabled = false;
+              }
+            });
+          })(shortenPeekBtn, hop.url);
+          actionsDiv.appendChild(shortenPeekBtn);
+        }
+
+        mainDiv.appendChild(urlEl);
+        mainDiv.appendChild(actionsDiv);
+        hopDiv.appendChild(numEl);
+        hopDiv.appendChild(statusEl);
+        hopDiv.appendChild(mainDiv);
+        chainDiv.appendChild(hopDiv);
       });
-      html += "</div>";
-      content.innerHTML = html;
+
+      content.innerHTML = "";
+      content.appendChild(chainDiv);
     }
 
     function doClean() {
