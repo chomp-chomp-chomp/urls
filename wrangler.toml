@@ -2,6 +2,9 @@ name = "chomp-urls"
 main = "worker-themed-no-titles.js"
 compatibility_date = "2024-01-20"
 
+[assets]
+directory = "."
+
 # KV namespace for storing short URLs
 [[kv_namespaces]]
 binding = "URLS"

@@ -296,12 +296,15 @@ const urlCleanerHtml = `<!DOCTYPE html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>URL Strip</title>
-  <link rel="icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon.ico">
-  <link rel="apple-touch-icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/apple-touch-icon.png">
-  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/clean/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/clean/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/clean/favicon-32x32.png">
+  <link rel="apple-touch-icon" href="/clean/apple-touch-icon.png">
+  <link rel="manifest" href="/clean/manifest.json">
   <meta name="theme-color" content="#e73b42">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="chmp.me">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="URL Strip">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
@@ -3293,6 +3296,25 @@ export default {
 
     if (path.startsWith('/api')) {
       return handleApi(request, env, path);
+    }
+
+    if (path === '/clean/manifest.json') {
+      const manifest = {
+        name: 'URL Strip',
+        short_name: 'URL Strip',
+        description: 'Clean tracking parameters from URLs',
+        start_url: '/clean',
+        display: 'standalone',
+        background_color: '#fdfdfd',
+        theme_color: '#e73b42',
+        icons: [
+          { src: '/clean/android-chrome-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+          { src: '/clean/android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+        ],
+      };
+      return new Response(JSON.stringify(manifest, null, 2), {
+        headers: { 'Content-Type': 'application/manifest+json', 'Cache-Control': 'public, max-age=3600' },
+      });
     }
 
     if (path === '/manifest.json') {
