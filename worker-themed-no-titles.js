@@ -625,6 +625,60 @@ const urlCleanerHtml = `<!DOCTYPE html>
     }
     .clear-btn:hover { border-color: #dc2626; color: #dc2626; background: transparent; transform: none; }
     @media (prefers-color-scheme: dark) { .clear-btn:hover { border-color: #f87171; color: #f87171; } }
+    .settings-divider { border: none; border-top: 1px solid var(--color-border); margin: 16px 0; }
+    .admin-btn-row { display: flex; gap: 8px; }
+    .admin-btn-row input { flex: 1; }
+    .btn-admin-login { background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); padding: 10px 16px; font-size: 14px; width: auto; flex-shrink: 0; }
+    .btn-admin-login:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-surface); transform: none; }
+    .auth-status { font-size: 12px; margin-top: 6px; min-height: 16px; }
+    .auth-status.ok { color: #16a34a; }
+    .auth-status.err { color: #dc2626; }
+    @media (prefers-color-scheme: dark) {
+      .auth-status.ok { color: #4ade80; }
+      .auth-status.err { color: #f87171; }
+    }
+    .link-btn { background: none; border: none; padding: 0; font-size: 12px; color: var(--color-accent); cursor: pointer; width: auto; text-decoration: underline; }
+    .link-btn:hover { background: none; transform: none; color: var(--color-accent-hover); }
+    .quick-shorten-panel {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .quick-shorten-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-muted); margin-bottom: 10px; }
+    .quick-row { display: flex; gap: 8px; }
+    .quick-row input { flex: 1; padding: 10px 12px; font-size: 14px; }
+    .btn-quick { background: var(--color-accent); color: white; border: none; padding: 10px 18px; font-size: 14px; font-weight: 600; width: auto; white-space: nowrap; flex-shrink: 0; }
+    .btn-quick:hover { background: var(--color-accent-hover); }
+    .quick-slug-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+    .quick-slug-label { font-size: 12px; font-weight: 500; color: var(--color-text-muted); white-space: nowrap; flex-shrink: 0; }
+    .links-panel { margin-top: 24px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; }
+    .links-header { padding: 10px 16px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
+    .links-title { font-size: 13px; font-weight: 600; color: var(--color-text-muted); }
+    .links-header-actions { display: flex; gap: 8px; align-items: center; }
+    .btn-refresh { background: var(--color-surface); color: var(--color-text-muted); border: 1px solid var(--color-border); }
+    .btn-refresh:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-surface); transform: none; }
+    .btn-admin-link { background: transparent; color: var(--color-accent); border: 1px solid currentColor; text-decoration: none; display: inline-flex; align-items: center; padding: 6px 14px; font-size: 13px; font-weight: 500; border-radius: 6px; }
+    .btn-admin-link:hover { background: rgba(231,59,66,0.06); transform: none; border: 1px solid currentColor; }
+    @media (prefers-color-scheme: dark) { .btn-admin-link:hover { background: rgba(255,107,122,0.08); } }
+    .links-loading { padding: 16px; font-size: 13px; color: var(--color-text-muted); }
+    .links-error { padding: 12px 16px; font-size: 13px; color: #dc2626; }
+    @media (prefers-color-scheme: dark) { .links-error { color: #f87171; } }
+    .links-empty { padding: 16px; font-size: 13px; color: var(--color-text-muted); text-align: center; }
+    .link-row { padding: 9px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--color-border); flex-wrap: wrap; }
+    .link-row:last-child { border-bottom: none; }
+    .link-code { font-size: 13px; font-weight: 600; color: var(--color-accent); white-space: nowrap; flex-shrink: 0; min-width: 60px; }
+    .link-url { font-size: 12px; color: var(--color-text-muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .link-actions { display: flex; gap: 5px; flex-shrink: 0; }
+    .btn-link-copy { background: var(--color-surface); color: var(--color-text-muted); border: 1px solid var(--color-border); }
+    .btn-link-copy:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-surface); transform: none; }
+    .btn-link-del { background: transparent; color: #dc2626; border: 1px solid #fecaca; }
+    .btn-link-del:hover { background: #fef2f2; border-color: #dc2626; transform: none; }
+    @media (prefers-color-scheme: dark) {
+      .btn-link-del { color: #f87171; border-color: #7f1d1d; }
+      .btn-link-del:hover { background: rgba(248,113,113,0.08); }
+    }
   </style>
 </head>
 <body>
@@ -644,11 +698,40 @@ const urlCleanerHtml = `<!DOCTYPE html>
           <input type="text" id="workerUrlInput" placeholder="https://chom.pm" spellcheck="false">
         </div>
         <div>
-          <label for="apiKeyInput">API Key</label>
+          <div class="label-row">
+            <label for="apiKeyInput">API Key</label>
+            <button class="link-btn" id="clearKeyBtn" style="display:none">Clear</button>
+          </div>
           <input type="password" id="apiKeyInput" placeholder="your-api-key" spellcheck="false">
           <div class="field-hint">Required for shortening. Cleaning works without it.</div>
         </div>
+        <hr class="settings-divider">
+        <div>
+          <label for="adminPwInput">Or log in with admin password</label>
+          <div class="admin-btn-row">
+            <input type="password" id="adminPwInput" placeholder="admin password" spellcheck="false">
+            <button class="btn-admin-login" id="adminLoginBtn" type="button">Log in</button>
+          </div>
+          <div class="auth-status" id="adminLoginStatus"></div>
+        </div>
       </div>
+    </div>
+
+    <div class="quick-shorten-panel" id="quickShortenPanel" style="display:none">
+      <div class="quick-shorten-title">Quick Shorten</div>
+      <div class="quick-row">
+        <input type="text" id="quickUrlInput" placeholder="Paste any URL to shorten&hellip;" spellcheck="false">
+        <button class="btn-sm btn-quick" id="quickBtn">Shorten</button>
+      </div>
+      <div class="quick-slug-row">
+        <span class="quick-slug-label">Slug</span>
+        <input class="custom-code-input" id="quickSlugInput" placeholder="optional" spellcheck="false">
+      </div>
+      <div class="short-result" id="quickResult" style="display:none">
+        <span class="short-url-text" id="quickResultUrl"></span>
+        <button class="btn-sm btn-copy" id="quickCopyBtn">Copy</button>
+      </div>
+      <div class="shorten-error-box" id="quickErrorEl" style="display:none"></div>
     </div>
 
     <div class="form-group">
@@ -694,6 +777,19 @@ const urlCleanerHtml = `<!DOCTYPE html>
       <div class="peek-section" id="peekSection" style="display:none">
         <div id="peekContent"></div>
       </div>
+    </div>
+
+    <div class="links-panel" id="linksPanelSection" style="display:none">
+      <div class="links-header">
+        <span class="links-title">My Links</span>
+        <div class="links-header-actions">
+          <button class="btn-sm btn-refresh" id="linksRefreshBtn">&#8635; Refresh</button>
+          <a class="btn-admin-link" href="/admin" target="_blank">Full admin &#8599;</a>
+        </div>
+      </div>
+      <div class="links-loading" id="linksLoading" style="display:none">Loading&hellip;</div>
+      <div class="links-error" id="linksError" style="display:none"></div>
+      <div id="linksList"></div>
     </div>
   </div>
 
@@ -771,6 +867,12 @@ const urlCleanerHtml = `<!DOCTYPE html>
     function hide(el) { el.style.display = "none"; }
 
     g("workerUrlInput").value = window.location.origin;
+
+    var savedApiKey = localStorage.getItem('cleanApiKey') || '';
+    if (savedApiKey) { g("apiKeyInput").value = savedApiKey; show(g("clearKeyBtn")); }
+
+    var adminToken = sessionStorage.getItem('cleanAdminToken') || '';
+    if (adminToken) { setTimeout(function() { updateLinksPanel(); loadLinks(); }, 0); }
 
     function updateCleanBtn() {
       var hasInput = !!g("urlInput").value.trim();
@@ -1183,6 +1285,196 @@ const urlCleanerHtml = `<!DOCTYPE html>
         g("traceBtn").classList.remove("loading");
         g("traceBtn").disabled = false;
         renderPeek();
+      }
+    });
+
+    // --- API key persistence ---
+    function onApiKeyChange() {
+      var val = g("apiKeyInput").value.trim();
+      if (val) {
+        localStorage.setItem('cleanApiKey', val);
+        show(g("clearKeyBtn"));
+      } else {
+        localStorage.removeItem('cleanApiKey');
+        hide(g("clearKeyBtn"));
+      }
+      updateQuickShorten();
+      renderResult();
+    }
+    g("apiKeyInput").addEventListener("input", onApiKeyChange);
+
+    g("clearKeyBtn").addEventListener("click", function() {
+      g("apiKeyInput").value = "";
+      localStorage.removeItem('cleanApiKey');
+      hide(g("clearKeyBtn"));
+      adminToken = "";
+      sessionStorage.removeItem('cleanAdminToken');
+      g("adminLoginStatus").textContent = "";
+      g("adminLoginStatus").className = "auth-status";
+      updateQuickShorten();
+      updateLinksPanel();
+      renderResult();
+    });
+
+    // --- Admin password login → fetch + save API key ---
+    g("adminLoginBtn").addEventListener("click", async function() {
+      var pw = g("adminPwInput").value.trim();
+      var statusEl = g("adminLoginStatus");
+      if (!pw) { statusEl.textContent = "Enter a password."; statusEl.className = "auth-status err"; return; }
+      statusEl.textContent = "Logging in…";
+      statusEl.className = "auth-status";
+      g("adminLoginBtn").disabled = true;
+      try {
+        var loginRes = await fetch("/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: pw })
+        });
+        var loginData = await loginRes.json();
+        if (!loginData.success) throw new Error(loginData.error || "Login failed");
+        adminToken = loginData.token;
+        sessionStorage.setItem('cleanAdminToken', adminToken);
+        var keyRes = await fetch("/admin/api-key", {
+          headers: { "Authorization": adminToken }
+        });
+        var keyData = await keyRes.json();
+        if (!keyData.apiKey) throw new Error("No API key configured on this worker");
+        g("apiKeyInput").value = keyData.apiKey;
+        localStorage.setItem('cleanApiKey', keyData.apiKey);
+        show(g("clearKeyBtn"));
+        g("adminPwInput").value = "";
+        statusEl.textContent = "✓ Logged in";
+        statusEl.className = "auth-status ok";
+        updateQuickShorten();
+        renderResult();
+        updateLinksPanel();
+        loadLinks();
+      } catch(err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "auth-status err";
+      } finally {
+        g("adminLoginBtn").disabled = false;
+      }
+    });
+
+    // --- Quick Shorten panel ---
+    function updateQuickShorten() {
+      var hasKey = !!(g("apiKeyInput").value.trim());
+      if (hasKey) { show(g("quickShortenPanel")); } else { hide(g("quickShortenPanel")); }
+    }
+    updateQuickShorten();
+
+    g("quickBtn").addEventListener("click", async function() {
+      var url = g("quickUrlInput").value.trim();
+      if (!url) return;
+      var apiKey = g("apiKeyInput").value.trim();
+      if (!apiKey) { openSettings(); return; }
+      hide(g("quickResult")); hide(g("quickErrorEl"));
+      g("quickBtn").disabled = true;
+      g("quickBtn").textContent = "…";
+      try {
+        var workerUrl = g("workerUrlInput").value || window.location.origin;
+        var slug = g("quickSlugInput").value.trim();
+        var short = await shortenUrl(url, workerUrl, apiKey, slug);
+        g("quickResultUrl").textContent = short;
+        show(g("quickResult")); hide(g("quickErrorEl"));
+      } catch(err) {
+        g("quickErrorEl").textContent = err.message;
+        show(g("quickErrorEl")); hide(g("quickResult"));
+      } finally {
+        g("quickBtn").disabled = false;
+        g("quickBtn").textContent = "Shorten";
+      }
+    });
+
+    g("quickUrlInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") g("quickBtn").click();
+    });
+
+    g("quickCopyBtn").addEventListener("click", function() {
+      var url = g("quickResultUrl").textContent;
+      if (!url) return;
+      navigator.clipboard.writeText(url).then(function() {
+        g("quickCopyBtn").textContent = "✓";
+        setTimeout(function() { g("quickCopyBtn").textContent = "Copy"; }, 2000);
+      });
+    });
+
+    // --- My Links panel ---
+    function updateLinksPanel() {
+      if (adminToken) { show(g("linksPanelSection")); } else { hide(g("linksPanelSection")); }
+    }
+
+    async function loadLinks() {
+      if (!adminToken) return;
+      show(g("linksLoading")); hide(g("linksError")); g("linksList").innerHTML = "";
+      try {
+        var res = await fetch("/admin/list", { headers: { "Authorization": adminToken } });
+        if (res.status === 401) {
+          adminToken = ""; sessionStorage.removeItem('cleanAdminToken');
+          updateLinksPanel(); return;
+        }
+        var data = await res.json();
+        hide(g("linksLoading"));
+        if (!data.urls || data.urls.length === 0) {
+          g("linksList").innerHTML = '<div class="links-empty">No short links yet.</div>';
+          return;
+        }
+        var origin = window.location.origin;
+        g("linksList").innerHTML = data.urls.map(function(u) {
+          return '<div class="link-row" data-code="' + esc(u.shortCode) + '">' +
+            '<span class="link-code">' + esc(u.shortCode) + '</span>' +
+            '<span class="link-url" title="' + esc(u.url) + '">' + esc(u.url) + '</span>' +
+            '<div class="link-actions">' +
+              '<button class="btn-sm btn-link-copy" data-copy="' + esc(origin + '/' + u.shortCode) + '">Copy</button>' +
+              '<button class="btn-sm btn-link-del" data-del="' + esc(u.shortCode) + '">Delete</button>' +
+            '</div>' +
+          '</div>';
+        }).join("");
+      } catch(err) {
+        hide(g("linksLoading"));
+        g("linksError").textContent = err.message;
+        show(g("linksError"));
+      }
+    }
+
+    function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
+
+    g("linksRefreshBtn").addEventListener("click", loadLinks);
+
+    g("linksList").addEventListener("click", async function(e) {
+      var copyBtn = e.target.closest(".btn-link-copy");
+      if (copyBtn) {
+        var url = copyBtn.getAttribute("data-copy");
+        navigator.clipboard.writeText(url).then(function() {
+          copyBtn.textContent = "✓";
+          setTimeout(function() { copyBtn.textContent = "Copy"; }, 2000);
+        });
+        return;
+      }
+      var delBtn = e.target.closest(".btn-link-del");
+      if (delBtn) {
+        var code = delBtn.getAttribute("data-del");
+        if (!confirm("Delete /" + code + "?")) return;
+        delBtn.disabled = true;
+        delBtn.textContent = "…";
+        try {
+          var res = await fetch("/admin/delete/" + encodeURIComponent(code), {
+            method: "DELETE",
+            headers: { "Authorization": adminToken }
+          });
+          var data = await res.json();
+          if (!data.success) throw new Error(data.error || "Delete failed");
+          var row = delBtn.closest(".link-row");
+          if (row) row.remove();
+          if (g("linksList").children.length === 0) {
+            g("linksList").innerHTML = '<div class="links-empty">No short links yet.</div>';
+          }
+        } catch(err) {
+          delBtn.disabled = false;
+          delBtn.textContent = "Delete";
+          alert(err.message);
+        }
       }
     });
   </script>
@@ -2737,6 +3029,10 @@ async function handleAdmin(request, env, path) {
 
   if (path === '/admin/bulk-create' && request.method === 'POST') {
     return handleBulkCreate(request, env);
+  }
+
+  if (path === '/admin/api-key' && request.method === 'GET') {
+    return jsonResponse({ apiKey: env.API_KEY || '' });
   }
 
   return jsonResponse({ error: 'Not found' }, 404);
