@@ -625,6 +625,34 @@ const urlCleanerHtml = `<!DOCTYPE html>
     }
     .clear-btn:hover { border-color: #dc2626; color: #dc2626; background: transparent; transform: none; }
     @media (prefers-color-scheme: dark) { .clear-btn:hover { border-color: #f87171; color: #f87171; } }
+    .settings-divider { border: none; border-top: 1px solid var(--color-border); margin: 16px 0; }
+    .admin-btn-row { display: flex; gap: 8px; }
+    .admin-btn-row input { flex: 1; }
+    .btn-admin-login { background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); padding: 10px 16px; font-size: 14px; width: auto; flex-shrink: 0; }
+    .btn-admin-login:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-surface); transform: none; }
+    .auth-status { font-size: 12px; margin-top: 6px; min-height: 16px; }
+    .auth-status.ok { color: #16a34a; }
+    .auth-status.err { color: #dc2626; }
+    @media (prefers-color-scheme: dark) {
+      .auth-status.ok { color: #4ade80; }
+      .auth-status.err { color: #f87171; }
+    }
+    .link-btn { background: none; border: none; padding: 0; font-size: 12px; color: var(--color-accent); cursor: pointer; width: auto; text-decoration: underline; }
+    .link-btn:hover { background: none; transform: none; color: var(--color-accent-hover); }
+    .quick-shorten-panel {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .quick-shorten-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-muted); margin-bottom: 10px; }
+    .quick-row { display: flex; gap: 8px; }
+    .quick-row input { flex: 1; padding: 10px 12px; font-size: 14px; }
+    .btn-quick { background: var(--color-accent); color: white; border: none; padding: 10px 18px; font-size: 14px; font-weight: 600; width: auto; white-space: nowrap; flex-shrink: 0; }
+    .btn-quick:hover { background: var(--color-accent-hover); }
+    .quick-slug-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+    .quick-slug-label { font-size: 12px; font-weight: 500; color: var(--color-text-muted); white-space: nowrap; flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -644,11 +672,40 @@ const urlCleanerHtml = `<!DOCTYPE html>
           <input type="text" id="workerUrlInput" placeholder="https://chom.pm" spellcheck="false">
         </div>
         <div>
-          <label for="apiKeyInput">API Key</label>
+          <div class="label-row">
+            <label for="apiKeyInput">API Key</label>
+            <button class="link-btn" id="clearKeyBtn" style="display:none">Clear</button>
+          </div>
           <input type="password" id="apiKeyInput" placeholder="your-api-key" spellcheck="false">
           <div class="field-hint">Required for shortening. Cleaning works without it.</div>
         </div>
+        <hr class="settings-divider">
+        <div>
+          <label for="adminPwInput">Or log in with admin password</label>
+          <div class="admin-btn-row">
+            <input type="password" id="adminPwInput" placeholder="admin password" spellcheck="false">
+            <button class="btn-admin-login" id="adminLoginBtn" type="button">Log in</button>
+          </div>
+          <div class="auth-status" id="adminLoginStatus"></div>
+        </div>
       </div>
+    </div>
+
+    <div class="quick-shorten-panel" id="quickShortenPanel" style="display:none">
+      <div class="quick-shorten-title">Quick Shorten</div>
+      <div class="quick-row">
+        <input type="text" id="quickUrlInput" placeholder="Paste any URL to shorten&hellip;" spellcheck="false">
+        <button class="btn-sm btn-quick" id="quickBtn">Shorten</button>
+      </div>
+      <div class="quick-slug-row">
+        <span class="quick-slug-label">Slug</span>
+        <input class="custom-code-input" id="quickSlugInput" placeholder="optional" spellcheck="false">
+      </div>
+      <div class="short-result" id="quickResult" style="display:none">
+        <span class="short-url-text" id="quickResultUrl"></span>
+        <button class="btn-sm btn-copy" id="quickCopyBtn">Copy</button>
+      </div>
+      <div class="shorten-error-box" id="quickErrorEl" style="display:none"></div>
     </div>
 
     <div class="form-group">
@@ -771,6 +828,9 @@ const urlCleanerHtml = `<!DOCTYPE html>
     function hide(el) { el.style.display = "none"; }
 
     g("workerUrlInput").value = window.location.origin;
+
+    var savedApiKey = localStorage.getItem('cleanApiKey') || '';
+    if (savedApiKey) { g("apiKeyInput").value = savedApiKey; show(g("clearKeyBtn")); }
 
     function updateCleanBtn() {
       var hasInput = !!g("urlInput").value.trim();
@@ -1184,6 +1244,111 @@ const urlCleanerHtml = `<!DOCTYPE html>
         g("traceBtn").disabled = false;
         renderPeek();
       }
+    });
+
+    // --- API key persistence ---
+    function onApiKeyChange() {
+      var val = g("apiKeyInput").value.trim();
+      if (val) {
+        localStorage.setItem('cleanApiKey', val);
+        show(g("clearKeyBtn"));
+      } else {
+        localStorage.removeItem('cleanApiKey');
+        hide(g("clearKeyBtn"));
+      }
+      updateQuickShorten();
+      renderResult();
+    }
+    g("apiKeyInput").addEventListener("input", onApiKeyChange);
+
+    g("clearKeyBtn").addEventListener("click", function() {
+      g("apiKeyInput").value = "";
+      localStorage.removeItem('cleanApiKey');
+      hide(g("clearKeyBtn"));
+      g("adminLoginStatus").textContent = "";
+      g("adminLoginStatus").className = "auth-status";
+      updateQuickShorten();
+      renderResult();
+    });
+
+    // --- Admin password login → fetch + save API key ---
+    g("adminLoginBtn").addEventListener("click", async function() {
+      var pw = g("adminPwInput").value.trim();
+      var statusEl = g("adminLoginStatus");
+      if (!pw) { statusEl.textContent = "Enter a password."; statusEl.className = "auth-status err"; return; }
+      statusEl.textContent = "Logging in…";
+      statusEl.className = "auth-status";
+      g("adminLoginBtn").disabled = true;
+      try {
+        var loginRes = await fetch("/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: pw })
+        });
+        var loginData = await loginRes.json();
+        if (!loginData.success) throw new Error(loginData.error || "Login failed");
+        var keyRes = await fetch("/admin/api-key", {
+          headers: { "Authorization": loginData.token }
+        });
+        var keyData = await keyRes.json();
+        if (!keyData.apiKey) throw new Error("No API key configured on this worker");
+        g("apiKeyInput").value = keyData.apiKey;
+        localStorage.setItem('cleanApiKey', keyData.apiKey);
+        show(g("clearKeyBtn"));
+        g("adminPwInput").value = "";
+        statusEl.textContent = "✓ API key saved";
+        statusEl.className = "auth-status ok";
+        updateQuickShorten();
+        renderResult();
+      } catch(err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "auth-status err";
+      } finally {
+        g("adminLoginBtn").disabled = false;
+      }
+    });
+
+    // --- Quick Shorten panel ---
+    function updateQuickShorten() {
+      var hasKey = !!(g("apiKeyInput").value.trim());
+      if (hasKey) { show(g("quickShortenPanel")); } else { hide(g("quickShortenPanel")); }
+    }
+    updateQuickShorten();
+
+    g("quickBtn").addEventListener("click", async function() {
+      var url = g("quickUrlInput").value.trim();
+      if (!url) return;
+      var apiKey = g("apiKeyInput").value.trim();
+      if (!apiKey) { openSettings(); return; }
+      hide(g("quickResult")); hide(g("quickErrorEl"));
+      g("quickBtn").disabled = true;
+      g("quickBtn").textContent = "…";
+      try {
+        var workerUrl = g("workerUrlInput").value || window.location.origin;
+        var slug = g("quickSlugInput").value.trim();
+        var short = await shortenUrl(url, workerUrl, apiKey, slug);
+        g("quickResultUrl").textContent = short;
+        show(g("quickResult")); hide(g("quickErrorEl"));
+      } catch(err) {
+        g("quickErrorEl").textContent = err.message;
+        show(g("quickErrorEl")); hide(g("quickResult"));
+      } finally {
+        g("quickBtn").disabled = false;
+        g("quickBtn").textContent = "Shorten";
+      }
+    });
+
+    g("quickUrlInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") g("quickBtn").click();
+    });
+
+    g("quickCopyBtn").addEventListener("click", function() {
+      var url = g("quickResultUrl").textContent;
+      if (!url) return;
+      navigator.clipboard.writeText(url).then(function() {
+        g("quickCopyBtn").textContent = "✓";
+        setTimeout(function() { g("quickCopyBtn").textContent = "Copy"; }, 2000);
+      });
     });
   </script>
 </body>
@@ -2737,6 +2902,10 @@ async function handleAdmin(request, env, path) {
 
   if (path === '/admin/bulk-create' && request.method === 'POST') {
     return handleBulkCreate(request, env);
+  }
+
+  if (path === '/admin/api-key' && request.method === 'GET') {
+    return jsonResponse({ apiKey: env.API_KEY || '' });
   }
 
   return jsonResponse({ error: 'Not found' }, 404);
