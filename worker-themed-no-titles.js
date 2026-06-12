@@ -666,10 +666,11 @@ const urlCleanerHtml = `<!DOCTYPE html>
     .links-error { padding: 12px 16px; font-size: 13px; color: #dc2626; }
     @media (prefers-color-scheme: dark) { .links-error { color: #f87171; } }
     .links-empty { padding: 16px; font-size: 13px; color: var(--color-text-muted); text-align: center; }
-    .link-row { padding: 9px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--color-border); flex-wrap: wrap; }
+    .link-row { padding: 10px 16px; display: flex; flex-direction: column; gap: 4px; border-bottom: 1px solid var(--color-border); }
     .link-row:last-child { border-bottom: none; }
-    .link-code { font-size: 13px; font-weight: 600; color: var(--color-accent); white-space: nowrap; flex-shrink: 0; min-width: 60px; }
-    .link-url { font-size: 12px; color: var(--color-text-muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .link-row-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .link-code { font-size: 13px; font-weight: 600; color: var(--color-accent); white-space: nowrap; flex-shrink: 0; }
+    .link-url { font-size: 12px; color: var(--color-text-muted); word-break: break-all; line-height: 1.5; }
     .link-actions { display: flex; gap: 5px; flex-shrink: 0; }
     .btn-link-copy { background: var(--color-surface); color: var(--color-text-muted); border: 1px solid var(--color-border); }
     .btn-link-copy:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-surface); transform: none; }
@@ -1423,12 +1424,14 @@ const urlCleanerHtml = `<!DOCTYPE html>
         var origin = window.location.origin;
         g("linksList").innerHTML = data.urls.map(function(u) {
           return '<div class="link-row" data-code="' + esc(u.shortCode) + '">' +
-            '<span class="link-code">' + esc(u.shortCode) + '</span>' +
-            '<span class="link-url" title="' + esc(u.url) + '">' + esc(u.url) + '</span>' +
-            '<div class="link-actions">' +
-              '<button class="btn-sm btn-link-copy" data-copy="' + esc(origin + '/' + u.shortCode) + '">Copy</button>' +
-              '<button class="btn-sm btn-link-del" data-del="' + esc(u.shortCode) + '">Delete</button>' +
+            '<div class="link-row-top">' +
+              '<span class="link-code">' + esc(u.shortCode) + '</span>' +
+              '<div class="link-actions">' +
+                '<button class="btn-sm btn-link-copy" data-copy="' + esc(origin + '/' + u.shortCode) + '">Copy</button>' +
+                '<button class="btn-sm btn-link-del" data-del="' + esc(u.shortCode) + '">Delete</button>' +
+              '</div>' +
             '</div>' +
+            '<div class="link-url">' + esc(u.url) + '</div>' +
           '</div>';
         }).join("");
       } catch(err) {
