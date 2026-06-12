@@ -653,6 +653,32 @@ const urlCleanerHtml = `<!DOCTYPE html>
     .btn-quick:hover { background: var(--color-accent-hover); }
     .quick-slug-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
     .quick-slug-label { font-size: 12px; font-weight: 500; color: var(--color-text-muted); white-space: nowrap; flex-shrink: 0; }
+    .links-panel { margin-top: 24px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; }
+    .links-header { padding: 10px 16px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
+    .links-title { font-size: 13px; font-weight: 600; color: var(--color-text-muted); }
+    .links-header-actions { display: flex; gap: 8px; align-items: center; }
+    .btn-refresh { background: var(--color-surface); color: var(--color-text-muted); border: 1px solid var(--color-border); }
+    .btn-refresh:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-surface); transform: none; }
+    .btn-admin-link { background: transparent; color: var(--color-accent); border: 1px solid currentColor; text-decoration: none; display: inline-flex; align-items: center; padding: 6px 14px; font-size: 13px; font-weight: 500; border-radius: 6px; }
+    .btn-admin-link:hover { background: rgba(231,59,66,0.06); transform: none; border: 1px solid currentColor; }
+    @media (prefers-color-scheme: dark) { .btn-admin-link:hover { background: rgba(255,107,122,0.08); } }
+    .links-loading { padding: 16px; font-size: 13px; color: var(--color-text-muted); }
+    .links-error { padding: 12px 16px; font-size: 13px; color: #dc2626; }
+    @media (prefers-color-scheme: dark) { .links-error { color: #f87171; } }
+    .links-empty { padding: 16px; font-size: 13px; color: var(--color-text-muted); text-align: center; }
+    .link-row { padding: 9px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--color-border); flex-wrap: wrap; }
+    .link-row:last-child { border-bottom: none; }
+    .link-code { font-size: 13px; font-weight: 600; color: var(--color-accent); white-space: nowrap; flex-shrink: 0; min-width: 60px; }
+    .link-url { font-size: 12px; color: var(--color-text-muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .link-actions { display: flex; gap: 5px; flex-shrink: 0; }
+    .btn-link-copy { background: var(--color-surface); color: var(--color-text-muted); border: 1px solid var(--color-border); }
+    .btn-link-copy:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-surface); transform: none; }
+    .btn-link-del { background: transparent; color: #dc2626; border: 1px solid #fecaca; }
+    .btn-link-del:hover { background: #fef2f2; border-color: #dc2626; transform: none; }
+    @media (prefers-color-scheme: dark) {
+      .btn-link-del { color: #f87171; border-color: #7f1d1d; }
+      .btn-link-del:hover { background: rgba(248,113,113,0.08); }
+    }
   </style>
 </head>
 <body>
@@ -752,6 +778,19 @@ const urlCleanerHtml = `<!DOCTYPE html>
         <div id="peekContent"></div>
       </div>
     </div>
+
+    <div class="links-panel" id="linksPanelSection" style="display:none">
+      <div class="links-header">
+        <span class="links-title">My Links</span>
+        <div class="links-header-actions">
+          <button class="btn-sm btn-refresh" id="linksRefreshBtn">&#8635; Refresh</button>
+          <a class="btn-admin-link" href="/admin" target="_blank">Full admin &#8599;</a>
+        </div>
+      </div>
+      <div class="links-loading" id="linksLoading" style="display:none">Loading&hellip;</div>
+      <div class="links-error" id="linksError" style="display:none"></div>
+      <div id="linksList"></div>
+    </div>
   </div>
 
   <script>
@@ -831,6 +870,9 @@ const urlCleanerHtml = `<!DOCTYPE html>
 
     var savedApiKey = localStorage.getItem('cleanApiKey') || '';
     if (savedApiKey) { g("apiKeyInput").value = savedApiKey; show(g("clearKeyBtn")); }
+
+    var adminToken = sessionStorage.getItem('cleanAdminToken') || '';
+    if (adminToken) { setTimeout(function() { updateLinksPanel(); loadLinks(); }, 0); }
 
     function updateCleanBtn() {
       var hasInput = !!g("urlInput").value.trim();
@@ -1265,9 +1307,12 @@ const urlCleanerHtml = `<!DOCTYPE html>
       g("apiKeyInput").value = "";
       localStorage.removeItem('cleanApiKey');
       hide(g("clearKeyBtn"));
+      adminToken = "";
+      sessionStorage.removeItem('cleanAdminToken');
       g("adminLoginStatus").textContent = "";
       g("adminLoginStatus").className = "auth-status";
       updateQuickShorten();
+      updateLinksPanel();
       renderResult();
     });
 
@@ -1287,8 +1332,10 @@ const urlCleanerHtml = `<!DOCTYPE html>
         });
         var loginData = await loginRes.json();
         if (!loginData.success) throw new Error(loginData.error || "Login failed");
+        adminToken = loginData.token;
+        sessionStorage.setItem('cleanAdminToken', adminToken);
         var keyRes = await fetch("/admin/api-key", {
-          headers: { "Authorization": loginData.token }
+          headers: { "Authorization": adminToken }
         });
         var keyData = await keyRes.json();
         if (!keyData.apiKey) throw new Error("No API key configured on this worker");
@@ -1296,10 +1343,12 @@ const urlCleanerHtml = `<!DOCTYPE html>
         localStorage.setItem('cleanApiKey', keyData.apiKey);
         show(g("clearKeyBtn"));
         g("adminPwInput").value = "";
-        statusEl.textContent = "✓ API key saved";
+        statusEl.textContent = "✓ Logged in";
         statusEl.className = "auth-status ok";
         updateQuickShorten();
         renderResult();
+        updateLinksPanel();
+        loadLinks();
       } catch(err) {
         statusEl.textContent = err.message;
         statusEl.className = "auth-status err";
@@ -1349,6 +1398,84 @@ const urlCleanerHtml = `<!DOCTYPE html>
         g("quickCopyBtn").textContent = "✓";
         setTimeout(function() { g("quickCopyBtn").textContent = "Copy"; }, 2000);
       });
+    });
+
+    // --- My Links panel ---
+    function updateLinksPanel() {
+      if (adminToken) { show(g("linksPanelSection")); } else { hide(g("linksPanelSection")); }
+    }
+
+    async function loadLinks() {
+      if (!adminToken) return;
+      show(g("linksLoading")); hide(g("linksError")); g("linksList").innerHTML = "";
+      try {
+        var res = await fetch("/admin/list", { headers: { "Authorization": adminToken } });
+        if (res.status === 401) {
+          adminToken = ""; sessionStorage.removeItem('cleanAdminToken');
+          updateLinksPanel(); return;
+        }
+        var data = await res.json();
+        hide(g("linksLoading"));
+        if (!data.urls || data.urls.length === 0) {
+          g("linksList").innerHTML = '<div class="links-empty">No short links yet.</div>';
+          return;
+        }
+        var origin = window.location.origin;
+        g("linksList").innerHTML = data.urls.map(function(u) {
+          return '<div class="link-row" data-code="' + esc(u.shortCode) + '">' +
+            '<span class="link-code">' + esc(u.shortCode) + '</span>' +
+            '<span class="link-url" title="' + esc(u.url) + '">' + esc(u.url) + '</span>' +
+            '<div class="link-actions">' +
+              '<button class="btn-sm btn-link-copy" data-copy="' + esc(origin + '/' + u.shortCode) + '">Copy</button>' +
+              '<button class="btn-sm btn-link-del" data-del="' + esc(u.shortCode) + '">Delete</button>' +
+            '</div>' +
+          '</div>';
+        }).join("");
+      } catch(err) {
+        hide(g("linksLoading"));
+        g("linksError").textContent = err.message;
+        show(g("linksError"));
+      }
+    }
+
+    function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
+
+    g("linksRefreshBtn").addEventListener("click", loadLinks);
+
+    g("linksList").addEventListener("click", async function(e) {
+      var copyBtn = e.target.closest(".btn-link-copy");
+      if (copyBtn) {
+        var url = copyBtn.getAttribute("data-copy");
+        navigator.clipboard.writeText(url).then(function() {
+          copyBtn.textContent = "✓";
+          setTimeout(function() { copyBtn.textContent = "Copy"; }, 2000);
+        });
+        return;
+      }
+      var delBtn = e.target.closest(".btn-link-del");
+      if (delBtn) {
+        var code = delBtn.getAttribute("data-del");
+        if (!confirm("Delete /" + code + "?")) return;
+        delBtn.disabled = true;
+        delBtn.textContent = "…";
+        try {
+          var res = await fetch("/admin/delete/" + encodeURIComponent(code), {
+            method: "DELETE",
+            headers: { "Authorization": adminToken }
+          });
+          var data = await res.json();
+          if (!data.success) throw new Error(data.error || "Delete failed");
+          var row = delBtn.closest(".link-row");
+          if (row) row.remove();
+          if (g("linksList").children.length === 0) {
+            g("linksList").innerHTML = '<div class="links-empty">No short links yet.</div>';
+          }
+        } catch(err) {
+          delBtn.disabled = false;
+          delBtn.textContent = "Delete";
+          alert(err.message);
+        }
+      }
     });
   </script>
 </body>
