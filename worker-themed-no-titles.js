@@ -996,7 +996,7 @@ ${QR_MODAL_JS}
     var savedApiKey = localStorage.getItem('cleanApiKey') || '';
     if (savedApiKey) { g("apiKeyInput").value = savedApiKey; show(g("clearKeyBtn")); }
 
-    var adminToken = sessionStorage.getItem('cleanAdminToken') || '';
+    var adminToken = localStorage.getItem('cleanAdminToken') || '';
     if (adminToken) { setTimeout(function() { updateLinksPanel(); loadLinks(); }, 0); }
 
     function updateCleanBtn() {
@@ -1442,7 +1442,7 @@ ${QR_MODAL_JS}
       localStorage.removeItem('cleanApiKey');
       hide(g("clearKeyBtn"));
       adminToken = "";
-      sessionStorage.removeItem('cleanAdminToken');
+      localStorage.removeItem('cleanAdminToken');
       g("adminLoginStatus").textContent = "";
       g("adminLoginStatus").className = "auth-status";
       updateQuickShorten();
@@ -1467,7 +1467,7 @@ ${QR_MODAL_JS}
         var loginData = await loginRes.json();
         if (!loginData.success) throw new Error(loginData.error || "Login failed");
         adminToken = loginData.token;
-        sessionStorage.setItem('cleanAdminToken', adminToken);
+        localStorage.setItem('cleanAdminToken', adminToken);
         var keyRes = await fetch("/admin/api-key", {
           headers: { "Authorization": adminToken }
         });
@@ -1551,7 +1551,7 @@ ${QR_MODAL_JS}
       try {
         var res = await fetch("/admin/list", { headers: { "Authorization": adminToken } });
         if (res.status === 401) {
-          adminToken = ""; sessionStorage.removeItem('cleanAdminToken');
+          adminToken = ""; localStorage.removeItem('cleanAdminToken');
           updateLinksPanel(); return;
         }
         var data = await res.json();
