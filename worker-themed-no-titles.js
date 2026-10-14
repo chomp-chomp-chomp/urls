@@ -33,6 +33,7 @@ const icons = {
   tag: '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
   qrCode: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>',
   list: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+  filter: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>',
 };
 
 // How many individual hits to keep in the rolling per-link click log (newest
@@ -1648,6 +1649,26 @@ const adminHtml = `<!DOCTYPE html>
             font-size: 12px;
         }
 
+        .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xs); }
+        .label-row label { margin-bottom: 0; }
+        .clean-url-btn {
+            width: auto; padding: 4px 10px; font-size: 12px; font-weight: 500;
+            background: var(--color-bg); color: var(--color-accent);
+            border: 1px solid var(--color-border); border-radius: 6px;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .clean-url-btn:hover { background: var(--color-sidebar-bg); border-color: var(--color-accent); transform: none; }
+        .removed-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .removed-tag {
+            font-size: 11px; font-weight: 500;
+            background: rgba(231,59,66,0.08); color: var(--color-accent);
+            padding: 2px 7px; border-radius: 99px; border: 1px solid rgba(231,59,66,0.2);
+        }
+        @media (prefers-color-scheme: dark) {
+            .removed-tag { background: rgba(255,107,122,0.1); border-color: rgba(255,107,122,0.25); }
+        }
+        .no-params-text { font-size: 11px; color: var(--color-text-light); }
+
         .search-match {
             background: rgba(231, 59, 66, 0.15);
             border-radius: 2px;
@@ -1755,8 +1776,12 @@ ${QR_MODAL_CSS}
 
             <form id="createForm">
                 <div class="form-group">
-                    <label for="longUrl">Long URL</label>
+                    <div class="label-row">
+                        <label for="longUrl">Long URL</label>
+                        <button type="button" class="clean-url-btn" id="cleanUrlBtn">${icons.filter} Clean</button>
+                    </div>
                     <input type="url" id="longUrl" placeholder="https://example.com/very/long/url" required>
+                    <div class="removed-tags" id="createRemovedParams" style="display:none"></div>
                 </div>
                 <div class="form-group">
                     <label for="title">Title (optional)</label>
@@ -1861,6 +1886,61 @@ ${QR_MODAL_JS}
             }
         });
 
+        const TRACKING_PARAMS = new Set([
+            "utm_source","utm_medium","utm_campaign","utm_term","utm_content",
+            "utm_id","utm_source_platform","utm_campaign_id","utm_creative_format",
+            "utm_marketing_tactic",
+            "_kx","uid","campaign_id",
+            "fbclid","fb_action_ids","fb_action_types","fb_source","fb_ref",
+            "gclid","gclsrc","dclid","gbraid","wbraid",
+            "msclkid",
+            "twclid",
+            "hsa_acc","hsa_cam","hsa_grp","hsa_ad","hsa_src","hsa_tgt",
+            "hsa_kw","hsa_mt","hsa_net","hsa_ver","hsa_la",
+            "mc_cid","mc_eid",
+            "mkt_tok",
+            "messageId",
+            "ref","referrer","source","campaign","trk","trkinfo",
+            "igshid","s_cid","ncid","cid","eid","mid",
+            "clickid","click_id","track","tracking",
+            "affiliate","aff_id","partner_id",
+            "zanpid","origin","sxsrf"
+        ]);
+
+        function cleanUrl(raw) {
+            const trimmed = raw.trim();
+            if (!trimmed) return { cleaned: "", removed: [] };
+            let url;
+            try { url = new URL(trimmed); } catch (e) { return { cleaned: trimmed, removed: [], error: "Not a valid URL" }; }
+            const removed = [];
+            const toDelete = [];
+            url.searchParams.forEach((v, key) => {
+                if (TRACKING_PARAMS.has(key.toLowerCase())) { toDelete.push(key); removed.push(key); }
+            });
+            toDelete.forEach(k => url.searchParams.delete(k));
+            let cleaned = url.toString();
+            if (url.searchParams.size === 0) cleaned = cleaned.replace(/[?]$/, "");
+            return { cleaned, removed };
+        }
+
+        document.getElementById('cleanUrlBtn').addEventListener('click', () => {
+            const input = document.getElementById('longUrl');
+            const removedRow = document.getElementById('createRemovedParams');
+            const result = cleanUrl(input.value);
+            if (result.error) {
+                removedRow.innerHTML = '<span class="no-params-text">' + result.error + '</span>';
+                removedRow.style.display = '';
+                return;
+            }
+            input.value = result.cleaned;
+            if (result.removed.length > 0) {
+                removedRow.innerHTML = result.removed.map(p => '<span class="removed-tag">' + p + '</span>').join('');
+            } else {
+                removedRow.innerHTML = '<span class="no-params-text">Already clean</span>';
+            }
+            removedRow.style.display = '';
+        });
+
         document.getElementById('createForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const longUrl = document.getElementById('longUrl').value;
@@ -1884,6 +1964,7 @@ ${QR_MODAL_JS}
                         showMessage('message', 'Short URL created: ' + fullUrl, 'success');
                     }
                     document.getElementById('createForm').reset();
+                    document.getElementById('createRemovedParams').style.display = 'none';
                     loadUrls();
                 } else {
                     if (response.status === 401) { showMessage('message', 'Session expired. Please login again.', 'error'); logout(); return; }
