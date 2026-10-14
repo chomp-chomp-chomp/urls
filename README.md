@@ -1,308 +1,122 @@
-# 🔗 Cloudflare Workers URL Shortener
+# chmp.me — URL Shortener & Link Toolkit
 
-A simple, fast, and secure URL shortener built with Cloudflare Workers and KV storage.
+A URL shortener and link-cleaning toolkit built as a single Cloudflare Worker, backed by Workers KV. Live at **[chmp.me](https://chmp.me)**.
+
+## What's here
+
+- **`/`** — a small directory/homepage linking out to the tools below.
+- **`/clean`** — "URL Strip": paste a URL, strip tracking parameters (`utm_*`, `fbclid`, `gclid`, etc.), optionally shorten the cleaned result, trace a redirect chain, and manage your own links if you've logged in with the admin password. Installable as a Home Screen PWA.
+- **`/admin`** — the admin panel: create, search, tag, and bulk-manage short links; CSV export/import; per-link QR codes; click analytics.
+- **`/{shortCode}`** — the actual redirect, with click tracking.
 
 ## Features
 
-- ⚡ **Lightning Fast**: Built on Cloudflare's global edge network
-- 🔒 **Secure Admin Panel**: Password-protected admin interface
-- 🔑 **Public API**: API key authentication for external integration
-- 🎨 **Beautiful UI**: Modern, responsive admin interface
-- 📦 **KV Storage**: Serverless key-value storage for URLs
-- 🚀 **Easy Deployment**: One-command deployment to Cloudflare
-- 🔗 **Custom Short Codes**: Support for custom short URL codes
-- 📊 **URL Management**: Create, list, and delete short URLs
+- **Tracking-parameter stripping** — removes `utm_*`, `fbclid`, `gclid`, and dozens of other known tracking params from a pasted URL.
+- **Short links** — random or custom short codes, optional titles and tags, bulk CSV upload, CSV export.
+- **QR codes** — generated entirely client-side (vendored [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator), nothing sent to a third party):
+  - **Link** QR codes reuse the shortener, so scans are tracked like any other click.
+  - **Email** and **Contact (vCard)** QR codes are encoded directly in the browser and never touch the server.
+- **Click analytics**, per link:
+  - Aggregate totals: click count, last-clicked time, top referrer, top country, top city.
+  - A rolling log of the 50 most recent individual hits — timestamp, full referrer URL, and city/region/country (via Cloudflare's edge geolocation, `request.cf`). No IP address is ever captured or stored.
+- **Two ways in**: a password-protected admin panel, and a public API secured by an API key (`X-API-Key`), for scripts and integrations.
+- **Redirect tracing** (`/api/peek`) — follow a URL's full redirect chain and see the final destination before shortening it.
+- Dark mode, installable PWA icons for both `/` and `/clean`.
 
-## Project Structure
+## Project structure
 
 ```
 urls/
-├── src/
-│   ├── index.js          # Main Worker code
-│   ├── admin.html        # Admin interface
-│   └── utils.js          # Helper functions
-├── wrangler.toml         # Cloudflare configuration
-├── package.json
-├── .gitignore
-└── README.md
+├── worker-themed-no-titles.js   # The entire app: Worker + every HTML page, inlined as JS template literals.
+│                                 # This is the file that's actually deployed — see `main` in wrangler.toml.
+├── wrangler.toml                 # Cloudflare config: Worker name, KV binding, static asset rules
+├── .assetsignore                 # Restricts the static-assets binding to /clean/* only (icons, manifest)
+├── clean/                        # Static icons/manifest served at /clean/*
+├── chrome-extension/             # Standalone Chrome extension that calls /api/shorten (see its own README)
+├── .github/workflows/deploy.yml  # Auto-deploys to Cloudflare on push to `main`
+└── *.md                          # Deep-dive docs (API usage, bookmarklets, iOS Shortcuts, etc.) — see below
 ```
+
+> **Note:** `src/` and the other `worker-*.js` files at the repo root (`worker-bundle.js`, `worker-enhanced.js`, `worker-themed.js`, `worker-with-tracking.js`, etc.) are earlier iterations kept for reference. They are **not** deployed — `worker-themed-no-titles.js` is the single source of truth for everything that runs in production. When making changes, edit that file.
 
 ## Setup
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
-- A Cloudflare account
-- Wrangler CLI (installed via npm)
+- Node.js and the Wrangler CLI (`npm install` pulls in `wrangler` as a dev dependency)
+- A Cloudflare account with Workers + KV enabled
 
-### Installation
+### Local setup
 
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd urls
-   ```
+```bash
+npm install
+npx wrangler login
 
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+# Create the KV namespace (only needed once) and update the id in wrangler.toml
+npx wrangler kv:namespace create "URLS"
+```
 
-3. **Configure Wrangler**:
-   - Login to Cloudflare:
-     ```bash
-     npx wrangler login
-     ```
+Set the two secrets the Worker reads at runtime:
 
-4. **Create KV Namespace**:
-   ```bash
-   npx wrangler kv:namespace create "URLS"
-   ```
-   
-   Copy the namespace ID from the output and update `wrangler.toml`:
-   ```toml
-   [[kv_namespaces]]
-   binding = "URLS"
-   id = "your-namespace-id-here"
-   ```
+```bash
+npx wrangler secret put ADMIN_PASSWORD
+npx wrangler secret put API_KEY
+```
 
-5. **Set Admin Password**:
-   - Edit `wrangler.toml` and change the `ADMIN_PASSWORD` and `API_KEY`:
-     ```toml
-     [vars]
-     ADMIN_PASSWORD = "your-secure-password"
-     API_KEY = "your-api-key-here"
-     ```
-   
-   **Security Note**: For production, use Wrangler secrets instead:
-   ```bash
-   npx wrangler secret put ADMIN_PASSWORD
-   npx wrangler secret put API_KEY
-   ```
-
-## Development
-
-Run the development server locally:
+### Run locally
 
 ```bash
 npm run dev
 ```
 
-This will start a local server at `http://localhost:8787`
+### Deploy
 
-## Deployment
-
-Deploy to Cloudflare Workers:
+Pushing to `main` deploys automatically via `.github/workflows/deploy.yml` (needs `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `ADMIN_PASSWORD`, and `API_KEY` set as GitHub Actions secrets). To deploy manually instead:
 
 ```bash
 npm run deploy
 ```
 
-Your URL shortener will be available at `https://chomp-urls.<your-subdomain>.workers.dev`
+## API
 
-## Usage
+The public API is a single endpoint, authenticated with your API key:
 
-### Admin Panel
-
-1. Navigate to `/admin` on your deployed worker
-2. Login with your admin password
-3. Create short URLs:
-   - Enter the long URL
-   - Optionally specify a custom short code
-   - Click "Create Short URL"
-4. Manage existing URLs:
-   - View all short URLs
-   - Delete URLs you no longer need
-
-### API Endpoints
-
-#### Public API (for external integration)
-
-##### Create Short URL (API Key Authentication)
-```
-POST /api/shorten
-X-API-Key: your-api-key-here
-Content-Type: application/json
-
-{
-  "url": "https://example.com/long/url",
-  "shortCode": "custom" // optional
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "shortCode": "abc123",
-  "url": "https://example.com/long/url",
-  "shortUrl": "https://your-worker.workers.dev/abc123"
-}
-```
-
-**Example with cURL:**
 ```bash
-curl -X POST https://your-worker.workers.dev/api/shorten \
-  -H "X-API-Key: your-api-key-here" \
+curl -X POST https://chmp.me/api/shorten \
+  -H "X-API-Key: YOUR-API-KEY" \
   -H "Content-Type: application/json" \
-  -d '{"url": "https://example.com/long/url"}'
+  -d '{"url": "https://example.com/long/url", "shortCode": "optional-custom-code"}'
 ```
 
-**Example with JavaScript:**
-```javascript
-const response = await fetch('https://your-worker.workers.dev/api/shorten', {
-  method: 'POST',
-  headers: {
-    'X-API-Key': 'your-api-key-here',
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    url: 'https://example.com/long/url',
-    shortCode: 'newsletter-jan' // optional
-  })
-});
-
-const data = await response.json();
-console.log(data.shortUrl);
+```json
+{ "success": true, "shortCode": "abc123", "url": "https://example.com/long/url", "shortUrl": "https://chmp.me/abc123" }
 ```
 
-**For more examples and integration patterns, see [example-usage.md](example-usage.md)** which includes:
-- Newsletter platform integrations (Mailchimp, SendGrid, Substack)
-- Examples in multiple languages (JavaScript, Python, PHP, Shell)
-- Best practices for batch processing and error handling
-- Troubleshooting guide
+Admin routes (`/admin/*`) use the same shape but authenticate with a login token from `POST /admin/login` instead of an API key, and additionally support listing, editing, tagging, deleting (single/bulk), stats, the click log, and CSV export/import.
 
-#### Admin Endpoints
+For more — including language-specific examples, newsletter-platform integrations, and troubleshooting — see **[example-usage.md](example-usage.md)** and **[API-USAGE.md](API-USAGE.md)**.
 
-#### Admin Login
-```
-POST /admin/login
-Content-Type: application/json
+## Other docs in this repo
 
-{
-  "password": "your-password"
-}
-```
+| File | What it covers |
+|---|---|
+| [API-USAGE.md](API-USAGE.md) / [example-usage.md](example-usage.md) | Full API reference and integration examples |
+| [CLICK-TRACKING.md](CLICK-TRACKING.md) | How click analytics work |
+| [BOOKMARKLET.md](BOOKMARKLET.md) | A browser bookmarklet for quick shortening |
+| [IOS-SHORTCUTS.md](IOS-SHORTCUTS.md) | iOS Shortcuts integration |
+| [INTEGRATIONS.md](INTEGRATIONS.md) | Third-party integration patterns |
+| [chrome-extension/README.md](chrome-extension/README.md) | The Chrome extension in this repo |
+| [CLOUDFLARE-SETUP-GUIDE.md](CLOUDFLARE-SETUP-GUIDE.md), [GITHUB-ACTIONS-SETUP.md](GITHUB-ACTIONS-SETUP.md), [DEPLOY-STEPS.md](DEPLOY-STEPS.md) | Deployment walkthroughs |
+| [FAVICON-SETUP.md](FAVICON-SETUP.md), [ADD-ICONS-GUIDE.md](ADD-ICONS-GUIDE.md) | Icon/PWA asset setup |
 
-#### Create Short URL
-```
-POST /admin/create
-Authorization: <token>
-Content-Type: application/json
+Some of these predate recent features (QR codes, tags, the click log) and may describe an earlier version of the admin UI — when in doubt, the behavior in `worker-themed-no-titles.js` is current.
 
-{
-  "url": "https://example.com/long/url",
-  "shortCode": "custom" // optional
-}
-```
+## Security notes
 
-#### List All URLs
-```
-GET /admin/list
-Authorization: <token>
-```
-
-#### Delete URL
-```
-DELETE /admin/delete/{shortCode}
-Authorization: <token>
-```
-
-#### Redirect (Public)
-```
-GET /{shortCode}
-```
-
-## Security
-
-- Admin panel is protected with password authentication
-- Simple token-based authentication (consider JWT for production)
-- CORS enabled for API endpoints
-- Input validation for URLs and short codes
-
-### Production Security Recommendations
-
-1. Use Wrangler secrets for sensitive data:
-   ```bash
-   npx wrangler secret put ADMIN_PASSWORD
-   ```
-
-2. Implement rate limiting to prevent abuse
-
-3. Consider adding HTTPS-only redirects
-
-4. Use JWT tokens for authentication instead of basic tokens
-
-5. Add IP-based access control for admin routes
-
-## Configuration
-
-### wrangler.toml
-
-```toml
-name = "chomp-urls"              # Worker name
-main = "src/index.js"            # Entry point
-compatibility_date = "2024-01-20"
-
-[[kv_namespaces]]
-binding = "URLS"                  # KV binding name
-id = "your-namespace-id"          # Your KV namespace ID
-
-[vars]
-ADMIN_PASSWORD = "changeme"       # Admin password (use secrets in prod)
-```
-
-## Monitoring
-
-View logs in real-time:
-
-```bash
-npm run tail
-```
-
-## Troubleshooting
-
-### KV Namespace Issues
-- Ensure the KV namespace is created and the ID is correct in `wrangler.toml`
-- Check that the binding name matches (`URLS`)
-
-### Authentication Issues
-- Verify the admin password is set correctly
-- Clear browser local storage if having login issues
-
-### Deployment Issues
-- Ensure you're logged in: `npx wrangler whoami`
-- Check your Cloudflare account has Workers enabled
-
-
-### Git PR Branch Repair ("src refspec work does not match any")
-If pushing your PR branch fails with `src refspec work does not match any`, run:
-
-```bash
-set -euo pipefail
-
-pwd
-git rev-parse --is-inside-work-tree
-git remote -v
-
-# Make sure we have current refs
-git fetch --all --prune
-
-# Create or reset local `work` branch to the known-good commit
-git checkout -B work 4bbe064
-
-# Push branch for PR compare (force-with-lease is safe for rewritten history)
-git push --force-with-lease -u origin work
-
-# Optional sanity checks
-git log --oneline --decorate -3
-git diff --name-status c81637b..work
-rg -n "icon16|icon48|icon128|default_icon|\"icons\"" chrome-extension/manifest.json chrome-extension/README.md
-```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+- Admin auth is a password-derived token with a 7-day server-side expiry, stored client-side (`localStorage` on `/clean`, so it survives across tabs/sessions; see the admin panel's own storage).
+- The public API is gated by a separate API key, independent of the admin password.
+- No IP addresses are collected anywhere in click tracking — only Cloudflare's coarse edge geolocation (country/region/city).
+- For production, prefer `wrangler secret put` over plaintext `[vars]` in `wrangler.toml` for `ADMIN_PASSWORD` and `API_KEY`.
 
 ## License
 
