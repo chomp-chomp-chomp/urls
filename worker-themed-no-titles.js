@@ -40,6 +40,11 @@ const icons = {
 // unbounded running totals. No IP address is ever captured or stored.
 const CLICK_LOG_LIMIT = 50;
 
+// The canonical domain for shortened links, regardless of which domain
+// /clean, /admin, or /api/shorten were actually accessed through.
+// chmp.me keeps serving the separate homepage/subdomain directory.
+const CANONICAL_DOMAIN = 'https://chom.pm';
+
 // ---------------------------------------------------------------------------
 // QR code generation: shared library + modal, embedded into both the admin
 // and clean-page templates below. URL QR codes reuse the existing shortener
@@ -143,7 +148,7 @@ const QR_MODAL_HTML = `
   </div>
 `;
 
-const QR_MODAL_JS = "\n// ---------------------------------------------------------------------------\n// QR Code modal: URL (trackable, reuses the shortener), Email & vCard\n// (untracked, encoded directly - nothing is sent to the server for those).\n// Requires a page-specific 'qrCreateShortLink(destUrl, customCode)' async\n// function to be defined for the \"Link\" tab's create-new flow.\n// ---------------------------------------------------------------------------\nvar qrRawData = '';\n\nfunction openQrModal(mode, prefill) {\n  var overlay = document.getElementById('qrModalOverlay');\n  overlay.classList.add('active');\n  document.getElementById('qrResultWrap').style.display = 'none';\n  document.getElementById('qrUrlError').style.display = 'none';\n  document.getElementById('qrEmailError').style.display = 'none';\n  document.getElementById('qrVcardError').style.display = 'none';\n  document.getElementById('qrCreatedRow').style.display = 'none';\n\n  if (prefill && prefill.shortUrl) {\n    document.getElementById('qrExistingUrlText').textContent = prefill.shortUrl;\n    document.getElementById('qrUrlExistingWrap').style.display = '';\n    document.getElementById('qrUrlFormWrap').style.display = 'none';\n    qrRenderResult(prefill.shortUrl);\n  } else {\n    document.getElementById('qrUrlExistingWrap').style.display = 'none';\n    document.getElementById('qrUrlFormWrap').style.display = '';\n    document.getElementById('qrDestUrl').value = '';\n    document.getElementById('qrDestSlug').value = '';\n  }\n\n  qrSwitchTab(mode || 'url');\n}\n\nfunction closeQrModal() {\n  document.getElementById('qrModalOverlay').classList.remove('active');\n}\n\nfunction qrSwitchTab(mode) {\n  var tabs = { url: 'qrTabBtnUrl', email: 'qrTabBtnEmail', vcard: 'qrTabBtnVcard' };\n  var panels = { url: 'qrPanelUrl', email: 'qrPanelEmail', vcard: 'qrPanelVcard' };\n  Object.keys(tabs).forEach(function(key) {\n    document.getElementById(tabs[key]).classList.toggle('active', key === mode);\n    document.getElementById(panels[key]).classList.toggle('active', key === mode);\n  });\n}\n\nfunction qrRenderResult(text) {\n  qrRawData = text;\n  var canvas = document.getElementById('qrCanvas');\n  qrDrawToCanvas(canvas, text);\n  document.getElementById('qrResultWrap').style.display = '';\n}\n\nfunction qrVcardEscape(s) {\n  return String(s || '').replace(/\\\\/g, '\\\\\\\\').replace(/,/g, '\\\\,').replace(/;/g, '\\\\;').replace(/\\n/g, '\\\\n');\n}\n\nfunction qrBuildMailto(to, subject, body) {\n  var params = [];\n  if (subject) params.push('subject=' + encodeURIComponent(subject));\n  if (body) params.push('body=' + encodeURIComponent(body));\n  return 'mailto:' + to.trim() + (params.length ? '?' + params.join('&') : '');\n}\n\nfunction qrBuildVcard(fields) {\n  var lines = ['BEGIN:VCARD', 'VERSION:3.0'];\n  lines.push('N:;' + qrVcardEscape(fields.name) + ';;;');\n  lines.push('FN:' + qrVcardEscape(fields.name));\n  if (fields.org) lines.push('ORG:' + qrVcardEscape(fields.org));\n  if (fields.phone) lines.push('TEL;TYPE=CELL:' + qrVcardEscape(fields.phone));\n  if (fields.email) lines.push('EMAIL:' + qrVcardEscape(fields.email));\n  if (fields.website) lines.push('URL:' + qrVcardEscape(fields.website));\n  lines.push('END:VCARD');\n  return lines.join('\\r\\n');\n}\n\nfunction qrWireModal() {\n  document.getElementById('qrModalCloseBtn').addEventListener('click', closeQrModal);\n  document.getElementById('qrModalOverlay').addEventListener('click', function(e) {\n    if (e.target === document.getElementById('qrModalOverlay')) closeQrModal();\n  });\n  document.addEventListener('keydown', function(e) {\n    if (e.key === 'Escape' && document.getElementById('qrModalOverlay').classList.contains('active')) closeQrModal();\n  });\n\n  ['qrTabBtnUrl', 'qrTabBtnEmail', 'qrTabBtnVcard'].forEach(function(id) {\n    document.getElementById(id).addEventListener('click', function() {\n      qrSwitchTab(this.getAttribute('data-qrtab'));\n    });\n  });\n\n  document.getElementById('qrUseNewUrlBtn').addEventListener('click', function() {\n    document.getElementById('qrUrlExistingWrap').style.display = 'none';\n    document.getElementById('qrUrlFormWrap').style.display = '';\n    document.getElementById('qrResultWrap').style.display = 'none';\n  });\n\n  document.getElementById('qrUrlGenerateBtn').addEventListener('click', async function() {\n    var btn = this;\n    var destUrl = document.getElementById('qrDestUrl').value.trim();\n    var slug = document.getElementById('qrDestSlug').value.trim();\n    var errEl = document.getElementById('qrUrlError');\n    errEl.style.display = 'none';\n    if (!destUrl) { errEl.textContent = 'Enter a URL to shorten.'; errEl.style.display = ''; return; }\n    btn.disabled = true;\n    btn.textContent = 'Generating\u2026';\n    try {\n      var shortUrl = await qrCreateShortLink(destUrl, slug);\n      document.getElementById('qrCreatedUrlText').textContent = shortUrl;\n      document.getElementById('qrCreatedRow').style.display = '';\n      qrRenderResult(shortUrl);\n    } catch (err) {\n      errEl.textContent = err.message || 'Failed to create short URL.';\n      errEl.style.display = '';\n    } finally {\n      btn.disabled = false;\n      btn.textContent = 'Generate trackable QR';\n    }\n  });\n\n  document.getElementById('qrCreatedCopyBtn').addEventListener('click', function() {\n    var url = document.getElementById('qrCreatedUrlText').textContent;\n    if (!url) return;\n    navigator.clipboard.writeText(url).then(function() {\n      document.getElementById('qrCreatedCopyBtn').textContent = 'Copied';\n      setTimeout(function() { document.getElementById('qrCreatedCopyBtn').textContent = 'Copy'; }, 2000);\n    });\n  });\n\n  document.getElementById('qrEmailGenerateBtn').addEventListener('click', function() {\n    var to = document.getElementById('qrEmailTo').value.trim();\n    var errEl = document.getElementById('qrEmailError');\n    errEl.style.display = 'none';\n    if (!to) { errEl.textContent = 'Enter a recipient email address.'; errEl.style.display = ''; return; }\n    var subject = document.getElementById('qrEmailSubject').value.trim();\n    var body = document.getElementById('qrEmailBody').value.trim();\n    qrRenderResult(qrBuildMailto(to, subject, body));\n  });\n\n  document.getElementById('qrVcardGenerateBtn').addEventListener('click', function() {\n    var name = document.getElementById('qrVcName').value.trim();\n    var errEl = document.getElementById('qrVcardError');\n    errEl.style.display = 'none';\n    if (!name) { errEl.textContent = 'Enter a full name.'; errEl.style.display = ''; return; }\n    qrRenderResult(qrBuildVcard({\n      name: name,\n      phone: document.getElementById('qrVcPhone').value.trim(),\n      email: document.getElementById('qrVcEmail').value.trim(),\n      org: document.getElementById('qrVcOrg').value.trim(),\n      website: document.getElementById('qrVcWebsite').value.trim()\n    }));\n  });\n\n  document.getElementById('qrDownloadBtn').addEventListener('click', function() {\n    var canvas = document.getElementById('qrCanvas');\n    var link = document.createElement('a');\n    link.download = 'qr-code.png';\n    link.href = canvas.toDataURL('image/png');\n    link.click();\n  });\n\n  document.getElementById('qrCopyDataBtn').addEventListener('click', function() {\n    if (!qrRawData) return;\n    navigator.clipboard.writeText(qrRawData).then(function() {\n      var btn = document.getElementById('qrCopyDataBtn');\n      btn.textContent = 'Copied';\n      setTimeout(function() { btn.textContent = 'Copy raw data'; }, 2000);\n    });\n  });\n}\n\nfunction openQrModalForUrl(fullUrl) {\n  openQrModal('url', { shortUrl: fullUrl });\n}\n\nqrWireModal();\n";
+const QR_MODAL_JS = "\n// ---------------------------------------------------------------------------\n// QR Code modal: URL (trackable, reuses the shortener), Email & vCard\n// (untracked, encoded directly - nothing is sent to the server for those).\n// Requires a page-specific 'qrCreateShortLink(destUrl, customCode)' async\n// function to be defined for the \"Link\" tab's create-new flow.\n// ---------------------------------------------------------------------------\nvar qrRawData = '';\n\nfunction openQrModal(mode, prefill) {\n  var overlay = document.getElementById('qrModalOverlay');\n  overlay.classList.add('active');\n  document.getElementById('qrResultWrap').style.display = 'none';\n  document.getElementById('qrUrlError').style.display = 'none';\n  document.getElementById('qrEmailError').style.display = 'none';\n  document.getElementById('qrVcardError').style.display = 'none';\n  document.getElementById('qrCreatedRow').style.display = 'none';\n\n  if (prefill && prefill.shortUrl) {\n    document.getElementById('qrExistingUrlText').textContent = prefill.shortUrl;\n    document.getElementById('qrUrlExistingWrap').style.display = '';\n    document.getElementById('qrUrlFormWrap').style.display = 'none';\n    qrRenderResult(prefill.shortUrl);\n  } else {\n    document.getElementById('qrUrlExistingWrap').style.display = 'none';\n    document.getElementById('qrUrlFormWrap').style.display = '';\n    document.getElementById('qrDestUrl').value = '';\n    document.getElementById('qrDestSlug').value = '';\n  }\n\n  var defaultMode = (typeof qrCreateShortLink === 'function') ? 'url' : 'email';\n  qrSwitchTab(mode || defaultMode);\n}\n\nfunction closeQrModal() {\n  document.getElementById('qrModalOverlay').classList.remove('active');\n}\n\nfunction qrSwitchTab(mode) {\n  var tabs = { url: 'qrTabBtnUrl', email: 'qrTabBtnEmail', vcard: 'qrTabBtnVcard' };\n  var panels = { url: 'qrPanelUrl', email: 'qrPanelEmail', vcard: 'qrPanelVcard' };\n  Object.keys(tabs).forEach(function(key) {\n    document.getElementById(tabs[key]).classList.toggle('active', key === mode);\n    document.getElementById(panels[key]).classList.toggle('active', key === mode);\n  });\n}\n\nfunction qrRenderResult(text) {\n  qrRawData = text;\n  var canvas = document.getElementById('qrCanvas');\n  qrDrawToCanvas(canvas, text);\n  document.getElementById('qrResultWrap').style.display = '';\n}\n\nfunction qrVcardEscape(s) {\n  return String(s || '').replace(/\\\\/g, '\\\\\\\\').replace(/,/g, '\\\\,').replace(/;/g, '\\\\;').replace(/\\n/g, '\\\\n');\n}\n\nfunction qrBuildMailto(to, subject, body) {\n  var params = [];\n  if (subject) params.push('subject=' + encodeURIComponent(subject));\n  if (body) params.push('body=' + encodeURIComponent(body));\n  return 'mailto:' + to.trim() + (params.length ? '?' + params.join('&') : '');\n}\n\nfunction qrBuildVcard(fields) {\n  var lines = ['BEGIN:VCARD', 'VERSION:3.0'];\n  lines.push('N:;' + qrVcardEscape(fields.name) + ';;;');\n  lines.push('FN:' + qrVcardEscape(fields.name));\n  if (fields.org) lines.push('ORG:' + qrVcardEscape(fields.org));\n  if (fields.phone) lines.push('TEL;TYPE=CELL:' + qrVcardEscape(fields.phone));\n  if (fields.email) lines.push('EMAIL:' + qrVcardEscape(fields.email));\n  if (fields.website) lines.push('URL:' + qrVcardEscape(fields.website));\n  lines.push('END:VCARD');\n  return lines.join('\\r\\n');\n}\n\nfunction qrWireModal() {\n  if (typeof qrCreateShortLink !== 'function') {\n    document.getElementById('qrTabBtnUrl').style.display = 'none';\n  }\n  document.getElementById('qrModalCloseBtn').addEventListener('click', closeQrModal);\n  document.getElementById('qrModalOverlay').addEventListener('click', function(e) {\n    if (e.target === document.getElementById('qrModalOverlay')) closeQrModal();\n  });\n  document.addEventListener('keydown', function(e) {\n    if (e.key === 'Escape' && document.getElementById('qrModalOverlay').classList.contains('active')) closeQrModal();\n  });\n\n  ['qrTabBtnUrl', 'qrTabBtnEmail', 'qrTabBtnVcard'].forEach(function(id) {\n    document.getElementById(id).addEventListener('click', function() {\n      qrSwitchTab(this.getAttribute('data-qrtab'));\n    });\n  });\n\n  document.getElementById('qrUseNewUrlBtn').addEventListener('click', function() {\n    document.getElementById('qrUrlExistingWrap').style.display = 'none';\n    document.getElementById('qrUrlFormWrap').style.display = '';\n    document.getElementById('qrResultWrap').style.display = 'none';\n  });\n\n  document.getElementById('qrUrlGenerateBtn').addEventListener('click', async function() {\n    var btn = this;\n    var destUrl = document.getElementById('qrDestUrl').value.trim();\n    var slug = document.getElementById('qrDestSlug').value.trim();\n    var errEl = document.getElementById('qrUrlError');\n    errEl.style.display = 'none';\n    if (!destUrl) { errEl.textContent = 'Enter a URL to shorten.'; errEl.style.display = ''; return; }\n    btn.disabled = true;\n    btn.textContent = 'Generating\u2026';\n    try {\n      var shortUrl = await qrCreateShortLink(destUrl, slug);\n      document.getElementById('qrCreatedUrlText').textContent = shortUrl;\n      document.getElementById('qrCreatedRow').style.display = '';\n      qrRenderResult(shortUrl);\n    } catch (err) {\n      errEl.textContent = err.message || 'Failed to create short URL.';\n      errEl.style.display = '';\n    } finally {\n      btn.disabled = false;\n      btn.textContent = 'Generate trackable QR';\n    }\n  });\n\n  document.getElementById('qrCreatedCopyBtn').addEventListener('click', function() {\n    var url = document.getElementById('qrCreatedUrlText').textContent;\n    if (!url) return;\n    navigator.clipboard.writeText(url).then(function() {\n      document.getElementById('qrCreatedCopyBtn').textContent = 'Copied';\n      setTimeout(function() { document.getElementById('qrCreatedCopyBtn').textContent = 'Copy'; }, 2000);\n    });\n  });\n\n  document.getElementById('qrEmailGenerateBtn').addEventListener('click', function() {\n    var to = document.getElementById('qrEmailTo').value.trim();\n    var errEl = document.getElementById('qrEmailError');\n    errEl.style.display = 'none';\n    if (!to) { errEl.textContent = 'Enter a recipient email address.'; errEl.style.display = ''; return; }\n    var subject = document.getElementById('qrEmailSubject').value.trim();\n    var body = document.getElementById('qrEmailBody').value.trim();\n    qrRenderResult(qrBuildMailto(to, subject, body));\n  });\n\n  document.getElementById('qrVcardGenerateBtn').addEventListener('click', function() {\n    var name = document.getElementById('qrVcName').value.trim();\n    var errEl = document.getElementById('qrVcardError');\n    errEl.style.display = 'none';\n    if (!name) { errEl.textContent = 'Enter a full name.'; errEl.style.display = ''; return; }\n    qrRenderResult(qrBuildVcard({\n      name: name,\n      phone: document.getElementById('qrVcPhone').value.trim(),\n      email: document.getElementById('qrVcEmail').value.trim(),\n      org: document.getElementById('qrVcOrg').value.trim(),\n      website: document.getElementById('qrVcWebsite').value.trim()\n    }));\n  });\n\n  document.getElementById('qrDownloadBtn').addEventListener('click', function() {\n    var canvas = document.getElementById('qrCanvas');\n    var link = document.createElement('a');\n    link.download = 'qr-code.png';\n    link.href = canvas.toDataURL('image/png');\n    link.click();\n  });\n\n  document.getElementById('qrCopyDataBtn').addEventListener('click', function() {\n    if (!qrRawData) return;\n    navigator.clipboard.writeText(qrRawData).then(function() {\n      var btn = document.getElementById('qrCopyDataBtn');\n      btn.textContent = 'Copied';\n      setTimeout(function() { btn.textContent = 'Copy raw data'; }, 2000);\n    });\n  });\n}\n\nfunction openQrModalForUrl(fullUrl) {\n  openQrModal('url', { shortUrl: fullUrl });\n}\n\nqrWireModal();\n";
 
 // ---------------------------------------------------------------------------
 // Guide page HTML
@@ -269,7 +274,7 @@ const guideHtml = `<!DOCTYPE html>
             <h3>Build the Shortcut</h3>
             <div class="step"><span class="step-number">1</span><p>Open the <strong>Shortcuts</strong> app and tap <strong>+</strong>. Name it <strong>Shorten URL</strong>.</p></div>
             <div class="step"><span class="step-number">2</span><p>Add <strong>Receive What's Shared</strong>. Set accepted types to <em>URLs</em> and <em>Safari Web Pages</em>.</p></div>
-            <div class="step"><span class="step-number">3</span><p>Add <strong>Get Contents of URL</strong>. Set URL to <code>https://chmp.me/api/shorten</code>, Method to <code>POST</code>, Request Body to <code>JSON</code>. Add key <code>url</code> with value <em>Shortcut Input</em>. Add headers: <code>Content-Type</code> = <code>application/json</code> and <code>X-API-Key</code> = your API key.</p></div>
+            <div class="step"><span class="step-number">3</span><p>Add <strong>Get Contents of URL</strong>. Set URL to <code>https://chom.pm/api/shorten</code>, Method to <code>POST</code>, Request Body to <code>JSON</code>. Add key <code>url</code> with value <em>Shortcut Input</em>. Add headers: <code>Content-Type</code> = <code>application/json</code> and <code>X-API-Key</code> = your API key.</p></div>
             <div class="step"><span class="step-number">4</span><p>Add <strong>Get Dictionary Value</strong>. Key: <code>shortUrl</code>, Dictionary: <em>Contents of URL</em>.</p></div>
             <div class="step"><span class="step-number">5</span><p>Add <strong>Copy to Clipboard</strong> with input set to <em>Dictionary Value</em>.</p></div>
             <div class="step"><span class="step-number">6</span><p>(Optional) Add <strong>Show Notification</strong> &mdash; Title: <em>URL Shortened</em>, Body: <em>Dictionary Value</em>.</p></div>
@@ -311,7 +316,7 @@ const guideHtml = `<!DOCTYPE html>
 
             <h3>Setup</h3>
             <div class="step"><span class="step-number">1</span><p>Copy the code below and <strong>replace <code>YOUR-API-KEY</code></strong> with your actual key.</p></div>
-            <pre><code>javascript:(function(){const url=window.location.href;const title=document.title;const apiKey='YOUR-API-KEY';const domain='https://chmp.me';fetch(domain+'/api/shorten',{method:'POST',headers:{'X-API-Key':apiKey,'Content-Type':'application/json'},body:JSON.stringify({url:url,title:title})}).then(r=>r.json()).then(d=>{if(d.success){navigator.clipboard.writeText(d.shortUrl);alert('Short URL copied!\\n'+d.shortUrl);}else{alert('Error: '+d.error);}}).catch(e=>alert('Network error: '+e.message));})();</code></pre>
+            <pre><code>javascript:(function(){const url=window.location.href;const title=document.title;const apiKey='YOUR-API-KEY';const domain='https://chom.pm';fetch(domain+'/api/shorten',{method:'POST',headers:{'X-API-Key':apiKey,'Content-Type':'application/json'},body:JSON.stringify({url:url,title:title})}).then(r=>r.json()).then(d=>{if(d.success){navigator.clipboard.writeText(d.shortUrl);alert('Short URL copied!\\n'+d.shortUrl);}else{alert('Error: '+d.error);}}).catch(e=>alert('Network error: '+e.message));})();</code></pre>
             <div class="step"><span class="step-number">2</span><p>Create a new bookmark in your browser. Set the <strong>Name</strong> to <em>Shorten URL</em> and paste the code as the <strong>URL</strong>.</p></div>
 
             <h3>Usage</h3>
@@ -327,7 +332,7 @@ const guideHtml = `<!DOCTYPE html>
             <p>Shorten URLs programmatically from any language or tool.</p>
 
             <h3>Endpoint</h3>
-            <pre><code>POST https://chmp.me/api/shorten</code></pre>
+            <pre><code>POST https://chom.pm/api/shorten</code></pre>
 
             <h3>Headers</h3>
             <pre><code>Content-Type: application/json
@@ -346,17 +351,17 @@ X-API-Key: YOUR-API-KEY</code></pre>
   "shortCode": "abc123",
   "url": "https://example.com/long/url",
   "title": "Optional page title",
-  "shortUrl": "https://chmp.me/abc123"
+  "shortUrl": "https://chom.pm/abc123"
 }</code></pre>
 
             <h3>cURL example</h3>
-            <pre><code>curl -X POST https://chmp.me/api/shorten \\
+            <pre><code>curl -X POST https://chom.pm/api/shorten \\
   -H "X-API-Key: YOUR-API-KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://example.com"}'</code></pre>
 
             <h3>JavaScript example</h3>
-            <pre><code>const res = await fetch('https://chmp.me/api/shorten', {
+            <pre><code>const res = await fetch('https://chom.pm/api/shorten', {
   method: 'POST',
   headers: {
     'X-API-Key': 'YOUR-API-KEY',
@@ -371,7 +376,7 @@ console.log(data.shortUrl);</code></pre>
             <pre><code>import requests
 
 resp = requests.post(
-    'https://chmp.me/api/shorten',
+    'https://chom.pm/api/shorten',
     headers={
         'X-API-Key': 'YOUR-API-KEY',
         'Content-Type': 'application/json',
@@ -383,7 +388,7 @@ print(resp.json()['shortUrl'])</code></pre>
             <h3>Shell alias</h3>
             <pre><code># Add to ~/.bashrc or ~/.zshrc
 shorten() {
-  curl -s -X POST https://chmp.me/api/shorten \\
+  curl -s -X POST https://chom.pm/api/shorten \\
     -H "X-API-Key: YOUR-API-KEY" \\
     -H "Content-Type: application/json" \\
     -d "{\\\"url\\\":\\\"$1\\\"}" | jq -r '.shortUrl'
@@ -487,18 +492,6 @@ const urlCleanerHtml = `<!DOCTYPE html>
       gap: 5px;
     }
     .settings-toggle:hover { border-color: var(--color-accent); color: var(--color-accent); transform: none; }
-    .settings-toggle.active { border-color: var(--color-accent); color: var(--color-accent); background: rgba(231,59,66,0.06); }
-    @media (prefers-color-scheme: dark) {
-      .settings-toggle.active { background: rgba(255,107,122,0.08); }
-    }
-    .settings-panel {
-      background: var(--color-bg);
-      border: 1px solid var(--color-border);
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 24px;
-    }
-    .settings-row { display: flex; flex-direction: column; gap: 16px; }
     .form-group { margin-bottom: 20px; }
     label {
       display: block;
@@ -507,8 +500,7 @@ const urlCleanerHtml = `<!DOCTYPE html>
       font-weight: 500;
       font-size: 14px;
     }
-    .field-hint { font-size: 12px; color: var(--color-text-muted); margin-top: 5px; }
-    input[type="text"], input[type="password"], textarea {
+    textarea {
       width: 100%;
       padding: 10px 12px;
       border: 2px solid var(--color-border);
@@ -519,10 +511,12 @@ const urlCleanerHtml = `<!DOCTYPE html>
       color: var(--color-text);
       transition: border-color 0.2s;
       outline: none;
+      resize: vertical;
+      min-height: 100px;
+      line-height: 1.6;
     }
-    input[type="text"]:focus, input[type="password"]:focus, textarea:focus { border-color: var(--color-accent); }
-    input::placeholder, textarea::placeholder { color: var(--color-text-light); }
-    textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+    textarea:focus { border-color: var(--color-accent); }
+    textarea::placeholder { color: var(--color-text-light); }
     .paste-hint { font-size: 12px; color: var(--color-text-light); text-align: right; margin-top: 6px; margin-bottom: 16px; }
     button {
       width: 100%;
@@ -615,57 +609,6 @@ const urlCleanerHtml = `<!DOCTYPE html>
     .btn-copy { background: var(--color-accent); color: white; border: none; }
     .btn-copy:hover { background: var(--color-accent-hover); }
     .btn-copy.copied { background: #16a34a; transform: none; }
-    .btn-shorten {
-      background: var(--color-bg);
-      color: var(--color-text-muted);
-      border: 1px solid var(--color-border);
-    }
-    .btn-shorten:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-bg); }
-    .no-api-hint {
-      padding: 10px 16px;
-      font-size: 13px;
-      color: var(--color-text-muted);
-      border-top: 1px solid var(--color-border);
-    }
-    .no-api-hint .link { color: var(--color-accent); cursor: pointer; text-decoration: underline; }
-    .shorten-section { border-top: 1px solid var(--color-border); }
-    .custom-code-row {
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-bottom: 1px solid var(--color-border);
-      background: var(--color-surface);
-    }
-    .custom-code-label { font-size: 13px; font-weight: 500; color: var(--color-text-muted); white-space: nowrap; flex-shrink: 0; }
-    .custom-code-input {
-      flex: 1;
-      padding: 6px 10px;
-      border: 1px solid var(--color-border);
-      border-radius: 6px;
-      font-size: 13px;
-      font-family: var(--font-primary), sans-serif;
-      background: var(--color-bg);
-      color: var(--color-text);
-      outline: none;
-      transition: border-color 0.2s;
-      min-width: 0;
-      width: auto;
-    }
-    .custom-code-input:focus { border-color: var(--color-accent); }
-    .custom-code-input::placeholder { color: var(--color-text-light); }
-    .shorten-error-box {
-      padding: 10px 16px;
-      font-size: 13px;
-      color: #dc2626;
-      background: #fef2f2;
-      border-bottom: 1px solid #fecaca;
-    }
-    @media (prefers-color-scheme: dark) {
-      .shorten-error-box { color: #f87171; background: #450a0a; border-color: #7f1d1d; }
-    }
-    .short-result { padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .short-url-text { font-size: 14px; font-weight: 500; color: var(--color-accent); word-break: break-all; flex: 1; min-width: 0; }
     .error-note { padding: 12px 16px; font-size: 13px; color: #dc2626; }
     @media (prefers-color-scheme: dark) { .error-note { color: #f87171; } }
     .btn-trace { background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); }
@@ -700,10 +643,6 @@ const urlCleanerHtml = `<!DOCTYPE html>
     .peek-action-btn.copy { background: var(--color-surface); color: var(--color-text-muted); border: 1px solid var(--color-border); }
     .peek-action-btn.copy:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-surface); transform: none; }
     .peek-action-btn.copy.copied { color: #16a34a; border-color: #16a34a; background: var(--color-surface); transform: none; }
-    .peek-action-btn.shorten { background: var(--color-accent); color: white; border: none; }
-    .peek-action-btn.shorten:hover { background: var(--color-accent-hover); }
-    .peek-action-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
-    .peek-short-url { font-size: 13px; font-weight: 500; color: var(--color-accent); word-break: break-all; }
     .peek-msg { padding: 12px 16px; font-size: 13px; color: var(--color-text-muted); }
     .peek-error { padding: 12px 16px; font-size: 13px; color: #dc2626; }
     @media (prefers-color-scheme: dark) { .peek-error { color: #f87171; } }
@@ -734,61 +673,6 @@ const urlCleanerHtml = `<!DOCTYPE html>
     }
     .clear-btn:hover { border-color: #dc2626; color: #dc2626; background: transparent; transform: none; }
     @media (prefers-color-scheme: dark) { .clear-btn:hover { border-color: #f87171; color: #f87171; } }
-    .settings-divider { border: none; border-top: 1px solid var(--color-border); margin: 16px 0; }
-    .admin-btn-row { display: flex; gap: 8px; }
-    .admin-btn-row input { flex: 1; }
-    .btn-admin-login { background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); padding: 10px 16px; font-size: 14px; width: auto; flex-shrink: 0; }
-    .btn-admin-login:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-surface); transform: none; }
-    .auth-status { font-size: 12px; margin-top: 6px; min-height: 16px; }
-    .auth-status.ok { color: #16a34a; }
-    .auth-status.err { color: #dc2626; }
-    @media (prefers-color-scheme: dark) {
-      .auth-status.ok { color: #4ade80; }
-      .auth-status.err { color: #f87171; }
-    }
-    .link-btn { background: none; border: none; padding: 0; font-size: 12px; color: var(--color-accent); cursor: pointer; width: auto; text-decoration: underline; }
-    .link-btn:hover { background: none; transform: none; color: var(--color-accent-hover); }
-    .quick-shorten-panel {
-      background: var(--color-bg);
-      border: 1px solid var(--color-border);
-      border-radius: 8px;
-      padding: 16px 20px;
-      margin-bottom: 20px;
-    }
-    .quick-shorten-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-muted); margin-bottom: 10px; }
-    .quick-row { display: flex; gap: 8px; }
-    .quick-row input { flex: 1; padding: 10px 12px; font-size: 14px; }
-    .btn-quick { background: var(--color-accent); color: white; border: none; padding: 10px 18px; font-size: 14px; font-weight: 600; width: auto; white-space: nowrap; flex-shrink: 0; }
-    .btn-quick:hover { background: var(--color-accent-hover); }
-    .quick-slug-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-    .quick-slug-label { font-size: 12px; font-weight: 500; color: var(--color-text-muted); white-space: nowrap; flex-shrink: 0; }
-    .links-panel { margin-top: 24px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; }
-    .links-header { padding: 10px 16px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
-    .links-title { font-size: 13px; font-weight: 600; color: var(--color-text-muted); }
-    .links-header-actions { display: flex; gap: 8px; align-items: center; }
-    .btn-refresh { background: var(--color-surface); color: var(--color-text-muted); border: 1px solid var(--color-border); }
-    .btn-refresh:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-surface); transform: none; }
-    .btn-admin-link { background: transparent; color: var(--color-accent); border: 1px solid currentColor; text-decoration: none; display: inline-flex; align-items: center; padding: 6px 14px; font-size: 13px; font-weight: 500; border-radius: 6px; }
-    .btn-admin-link:hover { background: rgba(231,59,66,0.06); transform: none; border: 1px solid currentColor; }
-    @media (prefers-color-scheme: dark) { .btn-admin-link:hover { background: rgba(255,107,122,0.08); } }
-    .links-loading { padding: 16px; font-size: 13px; color: var(--color-text-muted); }
-    .links-error { padding: 12px 16px; font-size: 13px; color: #dc2626; }
-    @media (prefers-color-scheme: dark) { .links-error { color: #f87171; } }
-    .links-empty { padding: 16px; font-size: 13px; color: var(--color-text-muted); text-align: center; }
-    .link-row { padding: 10px 16px; display: flex; flex-direction: column; gap: 4px; border-bottom: 1px solid var(--color-border); }
-    .link-row:last-child { border-bottom: none; }
-    .link-row-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .link-code { font-size: 13px; font-weight: 600; color: var(--color-accent); white-space: nowrap; flex-shrink: 0; }
-    .link-url { font-size: 12px; color: var(--color-text-muted); word-break: break-all; line-height: 1.5; }
-    .link-actions { display: flex; gap: 5px; flex-shrink: 0; }
-    .btn-link-copy { background: var(--color-surface); color: var(--color-text-muted); border: 1px solid var(--color-border); }
-    .btn-link-copy:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-surface); transform: none; }
-    .btn-link-del { background: transparent; color: #dc2626; border: 1px solid #fecaca; }
-    .btn-link-del:hover { background: #fef2f2; border-color: #dc2626; transform: none; }
-    @media (prefers-color-scheme: dark) {
-      .btn-link-del { color: #f87171; border-color: #7f1d1d; }
-      .btn-link-del:hover { background: rgba(248,113,113,0.08); }
-    }
 ${QR_MODAL_CSS}
   </style>
 </head>
@@ -797,56 +681,9 @@ ${QR_MODAL_CSS}
     <div class="page-header">
       <div class="title-row">
         <h1>URL<span>.</span>STRIP</h1>
-        <div style="display:flex; gap:8px;">
-          <button class="settings-toggle" id="qrModalOpenBtn" type="button">${icons.qrCode} QR Code</button>
-          <button class="settings-toggle" id="settingsToggle">&#9881; Settings</button>
-        </div>
+        <button class="settings-toggle" id="qrModalOpenBtn" type="button">${icons.qrCode} QR Code</button>
       </div>
-      <p class="subtitle">Remove tracking parameters &middot; Optionally shorten via chom.pm</p>
-    </div>
-
-    <div class="settings-panel" id="settingsPanel" style="display:none">
-      <div class="settings-row">
-        <div>
-          <label for="workerUrlInput">Worker URL</label>
-          <input type="text" id="workerUrlInput" placeholder="https://chom.pm" spellcheck="false">
-        </div>
-        <div>
-          <div class="label-row">
-            <label for="apiKeyInput">API Key</label>
-            <button class="link-btn" id="clearKeyBtn" style="display:none">Clear</button>
-          </div>
-          <input type="password" id="apiKeyInput" placeholder="your-api-key" spellcheck="false">
-          <div class="field-hint">Required for shortening. Cleaning works without it.</div>
-        </div>
-        <hr class="settings-divider">
-        <div>
-          <label for="adminPwInput">Or log in with admin password</label>
-          <div class="admin-btn-row">
-            <input type="password" id="adminPwInput" placeholder="admin password" spellcheck="false">
-            <button class="btn-admin-login" id="adminLoginBtn" type="button">Log in</button>
-          </div>
-          <div class="auth-status" id="adminLoginStatus"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="quick-shorten-panel" id="quickShortenPanel" style="display:none">
-      <div class="quick-shorten-title">Quick Shorten</div>
-      <div class="quick-row">
-        <input type="text" id="quickUrlInput" placeholder="Paste any URL to shorten&hellip;" spellcheck="false">
-        <button class="btn-sm btn-quick" id="quickBtn">Shorten</button>
-      </div>
-      <div class="quick-slug-row">
-        <span class="quick-slug-label">Slug</span>
-        <input class="custom-code-input" id="quickSlugInput" placeholder="optional" spellcheck="false">
-      </div>
-      <div class="short-result" id="quickResult" style="display:none">
-        <span class="short-url-text" id="quickResultUrl"></span>
-        <button class="btn-sm btn-copy" id="quickCopyBtn">Copy</button>
-        <button class="btn-sm btn-copy" id="quickQrBtn" type="button">${icons.qrCode} QR</button>
-      </div>
-      <div class="shorten-error-box" id="quickErrorEl" style="display:none"></div>
+      <p class="subtitle">Remove tracking parameters from a URL</p>
     </div>
 
     <div class="form-group">
@@ -871,41 +708,12 @@ ${QR_MODAL_CSS}
         <div class="removed-tags" id="removedList"></div>
         <div class="action-btns">
           <button class="btn-sm btn-copy" id="copyBtn">Copy</button>
-          <button class="btn-sm btn-shorten" id="shortenBtn" style="display:none">Shorten</button>
           <button class="btn-sm btn-trace" id="traceBtn" style="display:none">Trace</button>
-        </div>
-      </div>
-      <div class="no-api-hint" id="noApiHint" style="display:none">
-        No API key &mdash; <span class="link" id="openSettingsLink">add one in Settings</span> to enable shortening.
-      </div>
-      <div class="shorten-section" id="shortenSection" style="display:none">
-        <div class="custom-code-row">
-          <span class="custom-code-label">Custom slug</span>
-          <input class="custom-code-input" id="customCodeInput" placeholder="optional &mdash; leave blank for random" spellcheck="false">
-        </div>
-        <div class="shorten-error-box" id="shortenErrorEl" style="display:none"></div>
-        <div class="short-result" id="shortResult" style="display:none">
-          <span class="short-url-text" id="shortUrlText"></span>
-          <button class="btn-sm btn-copy" id="shortCopyBtn">Copy</button>
-          <button class="btn-sm btn-copy" id="shortQrBtn" type="button">${icons.qrCode} QR</button>
         </div>
       </div>
       <div class="peek-section" id="peekSection" style="display:none">
         <div id="peekContent"></div>
       </div>
-    </div>
-
-    <div class="links-panel" id="linksPanelSection" style="display:none">
-      <div class="links-header">
-        <span class="links-title">My Links</span>
-        <div class="links-header-actions">
-          <button class="btn-sm btn-refresh" id="linksRefreshBtn">&#8635; Refresh</button>
-          <a class="btn-admin-link" href="/admin" target="_blank">Full admin &#8599;</a>
-        </div>
-      </div>
-      <div class="links-loading" id="linksLoading" style="display:none">Loading&hellip;</div>
-      <div class="links-error" id="linksError" style="display:none"></div>
-      <div id="linksList"></div>
     </div>
   </div>
 ${QR_MODAL_HTML}
@@ -950,32 +758,8 @@ ${QR_MODAL_JS}
       return { cleaned: cleaned, removed: removed };
     }
 
-    async function shortenUrl(cleanedUrl, workerUrl, apiKey, customCode) {
-      var endpoint = workerUrl.replace(/[/]+$/, "") + "/api/shorten";
-      var body = { url: cleanedUrl };
-      if (customCode.trim()) body.shortCode = customCode.trim();
-      var res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
-        body: JSON.stringify(body)
-      });
-      var data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || "HTTP " + res.status);
-      return data.shortUrl;
-    }
-
-    async function qrCreateShortLink(destUrl, customCode) {
-      var apiKey = g("apiKeyInput").value.trim();
-      if (!apiKey) { openSettings(); throw new Error("Add an API key in Settings, then try again."); }
-      var workerUrl = g("workerUrlInput").value || window.location.origin;
-      var short = await shortenUrl(destUrl, workerUrl, apiKey, customCode || "");
-      if (adminToken) loadLinks();
-      return short;
-    }
-
-    async function peekUrl(targetUrl, workerUrl) {
-      var base = workerUrl.replace(/[/]+$/, "");
-      var endpoint = base + "/api/peek?url=" + encodeURIComponent(targetUrl);
+    async function peekUrl(targetUrl) {
+      var endpoint = "/api/peek?url=" + encodeURIComponent(targetUrl);
       var res = await fetch(endpoint, { method: "GET" });
       var data = await res.json();
       if (!data.success) throw new Error(data.error || "HTTP " + res.status);
@@ -983,9 +767,6 @@ ${QR_MODAL_JS}
     }
 
     var result = null;
-    var shortUrl = null;
-    var shortening = false;
-    var shortenError = null;
     var peekData = null;
     var peeking = false;
     var peekError = null;
@@ -993,14 +774,6 @@ ${QR_MODAL_JS}
     function g(id) { return document.getElementById(id); }
     function show(el) { el.style.display = ""; }
     function hide(el) { el.style.display = "none"; }
-
-    g("workerUrlInput").value = window.location.origin;
-
-    var savedApiKey = localStorage.getItem('cleanApiKey') || '';
-    if (savedApiKey) { g("apiKeyInput").value = savedApiKey; show(g("clearKeyBtn")); }
-
-    var adminToken = localStorage.getItem('cleanAdminToken') || '';
-    if (adminToken) { setTimeout(function() { updateLinksPanel(); loadLinks(); }, 0); }
 
     function updateCleanBtn() {
       var hasInput = !!g("urlInput").value.trim();
@@ -1010,7 +783,7 @@ ${QR_MODAL_JS}
 
     function doClear() {
       g("urlInput").value = "";
-      result = null; shortUrl = null; shortenError = null;
+      result = null;
       peekData = null; peekError = null; peeking = false;
       g("cleanBtn").disabled = true;
       hide(g("clearBtn"));
@@ -1026,8 +799,6 @@ ${QR_MODAL_JS}
         show(g("resultError"));
         hide(g("resultUrl"));
         hide(g("resultActions"));
-        hide(g("noApiHint"));
-        hide(g("shortenSection"));
         hide(g("peekSection"));
         hide(g("resultStatus"));
         return;
@@ -1053,35 +824,7 @@ ${QR_MODAL_JS}
         rl.innerHTML = "<span class='no-params-text'>No tracking params found</span>";
       }
 
-      var canShorten = !!(result.cleaned && !result.error);
-      if (canShorten) { show(g("shortenBtn")); } else { hide(g("shortenBtn")); }
-
-      var apiKey = g("apiKeyInput").value;
-      if (canShorten && !apiKey.trim() && !shortUrl) {
-        show(g("noApiHint"));
-      } else {
-        hide(g("noApiHint"));
-      }
-
-      if (shortUrl || shortenError || shortening) {
-        show(g("shortenSection"));
-        if (shortenError) {
-          g("shortenErrorEl").textContent = "Error: " + shortenError;
-          show(g("shortenErrorEl"));
-        } else {
-          hide(g("shortenErrorEl"));
-        }
-        if (shortUrl) {
-          g("shortUrlText").textContent = shortUrl;
-          show(g("shortResult"));
-        } else {
-          hide(g("shortResult"));
-        }
-      } else {
-        hide(g("shortenSection"));
-      }
-
-      if (canShorten) { show(g("traceBtn")); } else { hide(g("traceBtn")); }
+      show(g("traceBtn"));
       renderPeek();
     }
 
@@ -1147,7 +890,6 @@ ${QR_MODAL_JS}
         var actionsDiv = document.createElement("div");
         actionsDiv.className = "peek-hop-actions";
 
-        // Copy button
         var copyBtn = document.createElement("button");
         copyBtn.className = "peek-action-btn copy";
         copyBtn.textContent = "Copy";
@@ -1161,45 +903,6 @@ ${QR_MODAL_JS}
           });
         })(copyBtn, hop.url);
         actionsDiv.appendChild(copyBtn);
-
-        // Shorten button on final hop only
-        if (isFinal) {
-          var shortenPeekBtn = document.createElement("button");
-          shortenPeekBtn.className = "peek-action-btn shorten";
-          shortenPeekBtn.textContent = "Shorten";
-          (function(btn, url) {
-            btn.addEventListener("click", async function() {
-              var apiKey = g("apiKeyInput").value;
-              if (!apiKey.trim()) { openSettings(); return; }
-              btn.disabled = true;
-              btn.textContent = "…";
-              try {
-                var workerUrl = g("workerUrlInput").value || window.location.origin;
-                var s = await shortenUrl(url, workerUrl, apiKey, "");
-                // Replace button with short URL + copy button
-                var shortSpan = document.createElement("span");
-                shortSpan.className = "peek-short-url";
-                shortSpan.textContent = s;
-                var copyShortBtn = document.createElement("button");
-                copyShortBtn.className = "peek-action-btn copy";
-                copyShortBtn.textContent = "Copy";
-                copyShortBtn.addEventListener("click", function() {
-                  navigator.clipboard.writeText(s).then(function() {
-                    copyShortBtn.textContent = "✓ Copied";
-                    copyShortBtn.classList.add("copied");
-                    setTimeout(function() { copyShortBtn.textContent = "Copy"; copyShortBtn.classList.remove("copied"); }, 2000);
-                  });
-                });
-                btn.replaceWith(shortSpan);
-                actionsDiv.appendChild(copyShortBtn);
-              } catch(err) {
-                btn.textContent = "Error: " + err.message;
-                btn.disabled = false;
-              }
-            });
-          })(shortenPeekBtn, hop.url);
-          actionsDiv.appendChild(shortenPeekBtn);
-        }
 
         mainDiv.appendChild(urlEl);
         mainDiv.appendChild(actionsDiv);
@@ -1256,36 +959,6 @@ ${QR_MODAL_JS}
           })(copyCleanedBtn, finalCleaned.cleaned);
           cleanedActions.appendChild(copyCleanedBtn);
 
-          var shortenCleanedBtn = document.createElement("button");
-          shortenCleanedBtn.className = "peek-action-btn shorten";
-          shortenCleanedBtn.textContent = "Shorten";
-          (function(btn, url) {
-            btn.addEventListener("click", async function() {
-              var apiKey = g("apiKeyInput").value;
-              if (!apiKey.trim()) { openSettings(); return; }
-              btn.disabled = true; btn.textContent = "…";
-              try {
-                var workerUrl = g("workerUrlInput").value || window.location.origin;
-                var s = await shortenUrl(url, workerUrl, apiKey, "");
-                var shortSpan = document.createElement("span");
-                shortSpan.className = "peek-short-url";
-                shortSpan.textContent = s;
-                var copyShortBtn = document.createElement("button");
-                copyShortBtn.className = "peek-action-btn copy";
-                copyShortBtn.textContent = "Copy";
-                copyShortBtn.addEventListener("click", function() {
-                  navigator.clipboard.writeText(s).then(function() {
-                    copyShortBtn.textContent = "✓ Copied"; copyShortBtn.classList.add("copied");
-                    setTimeout(function() { copyShortBtn.textContent = "Copy"; copyShortBtn.classList.remove("copied"); }, 2000);
-                  });
-                });
-                btn.replaceWith(shortSpan);
-                cleanedActions.appendChild(copyShortBtn);
-              } catch(err) { btn.textContent = "Error"; btn.disabled = false; }
-            });
-          })(shortenCleanedBtn, finalCleaned.cleaned);
-          cleanedActions.appendChild(shortenCleanedBtn);
-
           cleanedSection.appendChild(cleanedActions);
           content.appendChild(cleanedSection);
         }
@@ -1296,27 +969,13 @@ ${QR_MODAL_JS}
       var input = g("urlInput").value;
       if (!input.trim()) return;
       result = cleanUrl(input);
-      shortUrl = null;
-      shortenError = null;
       peekData = null;
       peekError = null;
       peeking = false;
       g("copyBtn").textContent = "Copy";
       g("copyBtn").classList.remove("copied");
-      g("shortCopyBtn").textContent = "Copy";
-      g("shortCopyBtn").classList.remove("copied");
-      g("customCodeInput").value = "";
       renderResult();
     }
-
-    g("settingsToggle").addEventListener("click", function() {
-      var panel = g("settingsPanel");
-      var toggle = g("settingsToggle");
-      var isHidden = panel.style.display === "none";
-      panel.style.display = isHidden ? "" : "none";
-      toggle.classList.toggle("active", isHidden);
-      toggle.textContent = isHidden ? "✕ Close" : "⚙ Settings";
-    });
 
     g("urlInput").addEventListener("input", updateCleanBtn);
     g("urlInput").addEventListener("keydown", function(e) {
@@ -1329,8 +988,6 @@ ${QR_MODAL_JS}
           g("urlInput").value = pasted.trim();
           updateCleanBtn();
           result = cleanUrl(pasted.trim());
-          shortUrl = null;
-          shortenError = null;
           peekData = null;
           peekError = null;
           peeking = false;
@@ -1353,55 +1010,8 @@ ${QR_MODAL_JS}
       });
     });
 
-    g("shortCopyBtn").addEventListener("click", function() {
-      if (!shortUrl) return;
-      navigator.clipboard.writeText(shortUrl).then(function() {
-        g("shortCopyBtn").textContent = "✓ Copied";
-        g("shortCopyBtn").classList.add("copied");
-        setTimeout(function() { g("shortCopyBtn").textContent = "Copy"; g("shortCopyBtn").classList.remove("copied"); }, 2000);
-      });
-    });
-
-    g("shortQrBtn").addEventListener("click", function() {
-      if (!shortUrl) return;
-      openQrModalForUrl(shortUrl);
-    });
-
     g("qrModalOpenBtn").addEventListener("click", function() {
-      openQrModal("url");
-    });
-
-    function openSettings() {
-      var panel = g("settingsPanel");
-      var toggle = g("settingsToggle");
-      panel.style.display = "";
-      toggle.classList.add("active");
-      toggle.textContent = "✕ Close";
-      setTimeout(function() { g("apiKeyInput").focus(); }, 100);
-    }
-
-    g("openSettingsLink").addEventListener("click", openSettings);
-
-    g("shortenBtn").addEventListener("click", async function() {
-      if (!result || !result.cleaned || shortening) return;
-      var apiKey = g("apiKeyInput").value;
-      if (!apiKey.trim()) { openSettings(); return; }
-      shortening = true;
-      shortenError = null;
-      shortUrl = null;
-      renderResult();
-      try {
-        var workerUrl = g("workerUrlInput").value || window.location.origin;
-        var customCode = g("customCodeInput").value;
-        shortUrl = await shortenUrl(result.cleaned, workerUrl, apiKey, customCode);
-        shortenError = null;
-      } catch(err) {
-        shortenError = err.message;
-        shortUrl = null;
-      } finally {
-        shortening = false;
-        renderResult();
-      }
+      openQrModal();
     });
 
     g("traceBtn").addEventListener("click", async function() {
@@ -1413,8 +1023,7 @@ ${QR_MODAL_JS}
       g("traceBtn").disabled = true;
       renderPeek();
       try {
-        var workerUrl = g("workerUrlInput").value || window.location.origin;
-        peekData = await peekUrl(result.cleaned, workerUrl);
+        peekData = await peekUrl(result.cleaned);
       } catch(err) {
         peekError = err.message;
       } finally {
@@ -1422,210 +1031,6 @@ ${QR_MODAL_JS}
         g("traceBtn").classList.remove("loading");
         g("traceBtn").disabled = false;
         renderPeek();
-      }
-    });
-
-    // --- API key persistence ---
-    function onApiKeyChange() {
-      var val = g("apiKeyInput").value.trim();
-      if (val) {
-        localStorage.setItem('cleanApiKey', val);
-        show(g("clearKeyBtn"));
-      } else {
-        localStorage.removeItem('cleanApiKey');
-        hide(g("clearKeyBtn"));
-      }
-      updateQuickShorten();
-      renderResult();
-    }
-    g("apiKeyInput").addEventListener("input", onApiKeyChange);
-
-    g("clearKeyBtn").addEventListener("click", function() {
-      g("apiKeyInput").value = "";
-      localStorage.removeItem('cleanApiKey');
-      hide(g("clearKeyBtn"));
-      adminToken = "";
-      localStorage.removeItem('cleanAdminToken');
-      g("adminLoginStatus").textContent = "";
-      g("adminLoginStatus").className = "auth-status";
-      updateQuickShorten();
-      updateLinksPanel();
-      renderResult();
-    });
-
-    // --- Admin password login → fetch + save API key ---
-    g("adminLoginBtn").addEventListener("click", async function() {
-      var pw = g("adminPwInput").value.trim();
-      var statusEl = g("adminLoginStatus");
-      if (!pw) { statusEl.textContent = "Enter a password."; statusEl.className = "auth-status err"; return; }
-      statusEl.textContent = "Logging in…";
-      statusEl.className = "auth-status";
-      g("adminLoginBtn").disabled = true;
-      try {
-        var loginRes = await fetch("/admin/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password: pw })
-        });
-        var loginData = await loginRes.json();
-        if (!loginData.success) throw new Error(loginData.error || "Login failed");
-        adminToken = loginData.token;
-        localStorage.setItem('cleanAdminToken', adminToken);
-        var keyRes = await fetch("/admin/api-key", {
-          headers: { "Authorization": adminToken }
-        });
-        var keyData = await keyRes.json();
-        if (!keyData.apiKey) throw new Error("No API key configured on this worker");
-        g("apiKeyInput").value = keyData.apiKey;
-        localStorage.setItem('cleanApiKey', keyData.apiKey);
-        show(g("clearKeyBtn"));
-        g("adminPwInput").value = "";
-        statusEl.textContent = "✓ Logged in";
-        statusEl.className = "auth-status ok";
-        updateQuickShorten();
-        renderResult();
-        updateLinksPanel();
-        loadLinks();
-      } catch(err) {
-        statusEl.textContent = err.message;
-        statusEl.className = "auth-status err";
-      } finally {
-        g("adminLoginBtn").disabled = false;
-      }
-    });
-
-    // --- Quick Shorten panel ---
-    function updateQuickShorten() {
-      var hasKey = !!(g("apiKeyInput").value.trim());
-      if (hasKey) { show(g("quickShortenPanel")); } else { hide(g("quickShortenPanel")); }
-    }
-    updateQuickShorten();
-
-    g("quickBtn").addEventListener("click", async function() {
-      var url = g("quickUrlInput").value.trim();
-      if (!url) return;
-      var apiKey = g("apiKeyInput").value.trim();
-      if (!apiKey) { openSettings(); return; }
-      hide(g("quickResult")); hide(g("quickErrorEl"));
-      g("quickBtn").disabled = true;
-      g("quickBtn").textContent = "…";
-      try {
-        var workerUrl = g("workerUrlInput").value || window.location.origin;
-        var slug = g("quickSlugInput").value.trim();
-        var short = await shortenUrl(url, workerUrl, apiKey, slug);
-        g("quickResultUrl").textContent = short;
-        show(g("quickResult")); hide(g("quickErrorEl"));
-      } catch(err) {
-        g("quickErrorEl").textContent = err.message;
-        show(g("quickErrorEl")); hide(g("quickResult"));
-      } finally {
-        g("quickBtn").disabled = false;
-        g("quickBtn").textContent = "Shorten";
-      }
-    });
-
-    g("quickUrlInput").addEventListener("keydown", function(e) {
-      if (e.key === "Enter") g("quickBtn").click();
-    });
-
-    g("quickCopyBtn").addEventListener("click", function() {
-      var url = g("quickResultUrl").textContent;
-      if (!url) return;
-      navigator.clipboard.writeText(url).then(function() {
-        g("quickCopyBtn").textContent = "✓";
-        setTimeout(function() { g("quickCopyBtn").textContent = "Copy"; }, 2000);
-      });
-    });
-
-    g("quickQrBtn").addEventListener("click", function() {
-      var url = g("quickResultUrl").textContent;
-      if (!url) return;
-      openQrModalForUrl(url);
-    });
-
-    // --- My Links panel ---
-    function updateLinksPanel() {
-      if (adminToken) { show(g("linksPanelSection")); } else { hide(g("linksPanelSection")); }
-    }
-
-    async function loadLinks() {
-      if (!adminToken) return;
-      show(g("linksLoading")); hide(g("linksError")); g("linksList").innerHTML = "";
-      try {
-        var res = await fetch("/admin/list", { headers: { "Authorization": adminToken } });
-        if (res.status === 401) {
-          adminToken = ""; localStorage.removeItem('cleanAdminToken');
-          updateLinksPanel(); return;
-        }
-        var data = await res.json();
-        hide(g("linksLoading"));
-        if (!data.urls || data.urls.length === 0) {
-          g("linksList").innerHTML = '<div class="links-empty">No short links yet.</div>';
-          return;
-        }
-        var origin = window.location.origin;
-        g("linksList").innerHTML = data.urls.map(function(u) {
-          return '<div class="link-row" data-code="' + esc(u.shortCode) + '">' +
-            '<div class="link-row-top">' +
-              '<span class="link-code">' + esc(u.shortCode) + '</span>' +
-              '<div class="link-actions">' +
-                '<button class="btn-sm btn-link-copy" data-copy="' + esc(origin + '/' + u.shortCode) + '">Copy</button>' +
-                '<button class="btn-sm btn-link-copy" data-qr="' + esc(origin + '/' + u.shortCode) + '">${icons.qrCode} QR</button>' +
-                '<button class="btn-sm btn-link-del" data-del="' + esc(u.shortCode) + '">Delete</button>' +
-              '</div>' +
-            '</div>' +
-            '<div class="link-url">' + esc(u.url) + '</div>' +
-          '</div>';
-        }).join("");
-      } catch(err) {
-        hide(g("linksLoading"));
-        g("linksError").textContent = err.message;
-        show(g("linksError"));
-      }
-    }
-
-    function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
-
-    g("linksRefreshBtn").addEventListener("click", loadLinks);
-
-    g("linksList").addEventListener("click", async function(e) {
-      var qrBtn = e.target.closest("[data-qr]");
-      if (qrBtn) {
-        openQrModalForUrl(qrBtn.getAttribute("data-qr"));
-        return;
-      }
-      var copyBtn = e.target.closest(".btn-link-copy");
-      if (copyBtn) {
-        var url = copyBtn.getAttribute("data-copy");
-        navigator.clipboard.writeText(url).then(function() {
-          copyBtn.textContent = "✓";
-          setTimeout(function() { copyBtn.textContent = "Copy"; }, 2000);
-        });
-        return;
-      }
-      var delBtn = e.target.closest(".btn-link-del");
-      if (delBtn) {
-        var code = delBtn.getAttribute("data-del");
-        if (!confirm("Delete /" + code + "?")) return;
-        delBtn.disabled = true;
-        delBtn.textContent = "…";
-        try {
-          var res = await fetch("/admin/delete/" + encodeURIComponent(code), {
-            method: "DELETE",
-            headers: { "Authorization": adminToken }
-          });
-          var data = await res.json();
-          if (!data.success) throw new Error(data.error || "Delete failed");
-          var row = delBtn.closest(".link-row");
-          if (row) row.remove();
-          if (g("linksList").children.length === 0) {
-            g("linksList").innerHTML = '<div class="links-empty">No short links yet.</div>';
-          }
-        } catch(err) {
-          delBtn.disabled = false;
-          delBtn.textContent = "Delete";
-          alert(err.message);
-        }
       }
     });
   </script>
@@ -2471,7 +1876,7 @@ ${QR_MODAL_JS}
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    const fullUrl = window.location.origin + '/' + data.shortCode;
+                    const fullUrl = '${CANONICAL_DOMAIN}' + '/' + data.shortCode;
                     try {
                         await navigator.clipboard.writeText(fullUrl);
                         showMessage('message', 'Short URL created and copied to clipboard: ' + fullUrl, 'success');
@@ -2552,7 +1957,7 @@ ${QR_MODAL_JS}
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Failed to create short URL');
             loadUrls();
-            return window.location.origin + '/' + data.shortCode;
+            return '${CANONICAL_DOMAIN}' + '/' + data.shortCode;
         }
 
         function applySearch() {
@@ -2675,7 +2080,7 @@ ${QR_MODAL_JS}
                                 '<button class="edit-btn icon-btn" onclick="startEdit(\\'' + item.shortCode + '\\')" title="Edit short code">${icons.edit}</button>' +
                             '</div>' +
                             '<button class="copy-btn icon-btn" onclick="copyUrl(\\'' + item.shortCode + '\\', this)">${icons.copy} Copy</button>' +
-                            '<button class="copy-btn icon-btn" onclick="openQrModalForUrl(\\'' + window.location.origin + '/' + item.shortCode + '\\')" title="Generate QR code">${icons.qrCode} QR</button>' +
+                            '<button class="copy-btn icon-btn" onclick="openQrModalForUrl(\\'' + '${CANONICAL_DOMAIN}' + '/' + item.shortCode + '\\')" title="Generate QR code">${icons.qrCode} QR</button>' +
                         '</div>' +
                         titleHtml +
                         tagsHtml +
@@ -2903,7 +2308,7 @@ ${QR_MODAL_JS}
         }
 
         async function copyUrl(shortCode, button) {
-            const fullUrl = window.location.origin + '/' + shortCode;
+            const fullUrl = '${CANONICAL_DOMAIN}' + '/' + shortCode;
             try {
                 await navigator.clipboard.writeText(fullUrl);
                 const orig = button.innerHTML;
@@ -3452,7 +2857,7 @@ async function handleCreate(request, env) {
       url,
       title: title || null,
       tags: cleanTags,
-      shortUrl: '/' + code,
+      shortUrl: CANONICAL_DOMAIN + '/' + code,
     });
   } catch (error) {
     return jsonResponse({ error: 'Invalid request' }, 400);
@@ -3786,8 +3191,7 @@ async function handleApiShorten(request, env) {
 
     await env.URLS.put(code, serializeUrlValue(url, title));
 
-    const requestUrl = new URL(request.url);
-    const shortUrl = requestUrl.protocol + '//' + requestUrl.host + '/' + code;
+    const shortUrl = CANONICAL_DOMAIN + '/' + code;
 
     return jsonResponse({
       success: true,
@@ -3910,6 +3314,13 @@ export default {
           'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
         },
       });
+    }
+
+    // /clean and /admin always live on chom.pm now; chmp.me keeps serving the
+    // homepage/subdomain directory as before. 307 preserves method + body for
+    // any direct API calls still pointed at the old domain.
+    if (url.hostname === 'chmp.me' && (path === '/clean' || path === '/admin' || path.startsWith('/admin/'))) {
+      return Response.redirect(CANONICAL_DOMAIN + path + url.search, 307);
     }
 
     if (path.startsWith('/admin')) {
@@ -4645,7 +4056,7 @@ export default {
                 <div class="inner-card-sub">It Happens</div>
               </div>
             </a>
-            <a href="https://chmp.me/admin" class="inner-card">
+            <a href="https://chom.pm/admin" class="inner-card">
               <div class="inner-card-body">
                 <div class="inner-card-name">URL Shortener</div>
                 <div class="inner-card-sub">Share the chmp</div>

@@ -1,27 +1,28 @@
-# chmp.me — URL Shortener & Link Toolkit
+# chom.pm / chmp.me — URL Shortener & Link Toolkit
 
-A URL shortener and link-cleaning toolkit built as a single Cloudflare Worker, backed by Workers KV. Live at **[chmp.me](https://chmp.me)**.
+A URL shortener and link-cleaning toolkit built as a single Cloudflare Worker, backed by Workers KV, spanning two custom domains:
+
+- **[chmp.me](https://chmp.me)** — a homepage/directory linking out to this and other sibling tools (`dl.`, `clip.`, `cooling.`, `summit.chmp.me`).
+- **[chom.pm](https://chom.pm)** — where the shortener itself lives: `/clean`, `/admin`, and every generated short link (`chom.pm/{code}`). `chmp.me/clean` and `chmp.me/admin` redirect here automatically; old `chmp.me/{code}` links keep working.
 
 ## What's here
 
-- **`/`** — a small directory/homepage linking out to the tools below.
-- **`/clean`** — "URL Strip": paste a URL, strip tracking parameters (`utm_*`, `fbclid`, `gclid`, etc.), optionally shorten the cleaned result, trace a redirect chain, and manage your own links if you've logged in with the admin password. Installable as a Home Screen PWA.
-- **`/admin`** — the admin panel: create, search, tag, and bulk-manage short links; CSV export/import; per-link QR codes; click analytics.
-- **`/{shortCode}`** — the actual redirect, with click tracking.
+- **`/clean`** (chom.pm) — "URL Strip": paste a URL, strip tracking parameters (`utm_*`, `fbclid`, `gclid`, etc.), trace its redirect chain, and generate Email/Contact QR codes. No login, no API key — just the stripper and the untracked QR generator.
+- **`/admin`** (chom.pm) — everything else: create, search, tag, and bulk-manage short links; CSV export/import; per-link QR codes (including trackable Link QR codes); click analytics.
+- **`/{shortCode}`** — the actual redirect, with click tracking, resolved on either domain.
 
 ## Features
 
-- **Tracking-parameter stripping** — removes `utm_*`, `fbclid`, `gclid`, and dozens of other known tracking params from a pasted URL.
-- **Short links** — random or custom short codes, optional titles and tags, bulk CSV upload, CSV export.
+- **Tracking-parameter stripping** (`/clean`) — removes `utm_*`, `fbclid`, `gclid`, and dozens of other known tracking params from a pasted URL, with a redirect-chain tracer (`/api/peek`) alongside it.
+- **Short links** (`/admin`) — random or custom short codes, optional titles and tags, bulk CSV upload, CSV export.
 - **QR codes** — generated entirely client-side (vendored [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator), nothing sent to a third party):
-  - **Link** QR codes reuse the shortener, so scans are tracked like any other click.
-  - **Email** and **Contact (vCard)** QR codes are encoded directly in the browser and never touch the server.
-- **Click analytics**, per link:
+  - **Link** QR codes reuse the shortener, so scans are tracked like any other click. Admin only, since it's the only page that can create/manage short links.
+  - **Email** and **Contact (vCard)** QR codes are encoded directly in the browser and never touch the server — available on both `/clean` and `/admin`.
+- **Click analytics** (`/admin`), per link:
   - Aggregate totals: click count, last-clicked time, top referrer, top country, top city.
   - A rolling log of the 50 most recent individual hits — timestamp, full referrer URL, and city/region/country (via Cloudflare's edge geolocation, `request.cf`). No IP address is ever captured or stored.
 - **Two ways in**: a password-protected admin panel, and a public API secured by an API key (`X-API-Key`), for scripts and integrations.
-- **Redirect tracing** (`/api/peek`) — follow a URL's full redirect chain and see the final destination before shortening it.
-- Dark mode, installable PWA icons for both `/` and `/clean`.
+- Dark mode, installable PWA icons for `/clean`.
 
 ## Project structure
 
@@ -82,15 +83,17 @@ npm run deploy
 The public API is a single endpoint, authenticated with your API key:
 
 ```bash
-curl -X POST https://chmp.me/api/shorten \
+curl -X POST https://chom.pm/api/shorten \
   -H "X-API-Key: YOUR-API-KEY" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com/long/url", "shortCode": "optional-custom-code"}'
 ```
 
 ```json
-{ "success": true, "shortCode": "abc123", "url": "https://example.com/long/url", "shortUrl": "https://chmp.me/abc123" }
+{ "success": true, "shortCode": "abc123", "url": "https://example.com/long/url", "shortUrl": "https://chom.pm/abc123" }
 ```
+
+The response's `shortUrl` is always `chom.pm`, regardless of which domain `/api/shorten` was actually called through.
 
 Admin routes (`/admin/*`) use the same shape but authenticate with a login token from `POST /admin/login` instead of an API key, and additionally support listing, editing, tagging, deleting (single/bulk), stats, the click log, and CSV export/import.
 
@@ -109,11 +112,12 @@ For more — including language-specific examples, newsletter-platform integrati
 | [CLOUDFLARE-SETUP-GUIDE.md](CLOUDFLARE-SETUP-GUIDE.md), [GITHUB-ACTIONS-SETUP.md](GITHUB-ACTIONS-SETUP.md), [DEPLOY-STEPS.md](DEPLOY-STEPS.md) | Deployment walkthroughs |
 | [FAVICON-SETUP.md](FAVICON-SETUP.md), [ADD-ICONS-GUIDE.md](ADD-ICONS-GUIDE.md) | Icon/PWA asset setup |
 
-Some of these predate recent features (QR codes, tags, the click log) and may describe an earlier version of the admin UI — when in doubt, the behavior in `worker-themed-no-titles.js` is current.
+Some of these predate recent features (QR codes, tags, the click log, the chom.pm domain split) and may describe an earlier version of the admin UI or use `chmp.me` in examples where `chom.pm` is now canonical — when in doubt, the behavior in `worker-themed-no-titles.js` is current.
 
 ## Security notes
 
-- Admin auth is a password-derived token with a 7-day server-side expiry, stored client-side (`localStorage` on `/clean`, so it survives across tabs/sessions; see the admin panel's own storage).
+- Admin auth is a password-derived token with a 7-day server-side expiry, stored in `localStorage` so it survives across tabs/sessions.
+- `/clean` requires no login or API key at all — it only strips URLs, traces redirects, and generates untracked Email/Contact QR codes.
 - The public API is gated by a separate API key, independent of the admin password.
 - No IP addresses are collected anywhere in click tracking — only Cloudflare's coarse edge geolocation (country/region/city).
 - For production, prefer `wrangler secret put` over plaintext `[vars]` in `wrangler.toml` for `ADMIN_PASSWORD` and `API_KEY`.
