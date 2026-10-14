@@ -1898,6 +1898,11 @@ const adminHtml = `<!DOCTYPE html>
             white-space: nowrap;
             flex-shrink: 0;
         }
+        .log-city {
+            color: var(--color-text-muted);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
         .log-referrer {
             color: var(--color-text-light);
             word-break: break-all;
@@ -2625,6 +2630,7 @@ ${QR_MODAL_JS}
                     const lastClicked = item.stats.lastClicked ? formatTimeAgo(item.stats.lastClicked) : 'Never';
                     const topReferrer = item.stats.topReferrer || 'Direct';
                     const topCountry = item.stats.topCountry || 'Unknown';
+                    const topCity = item.stats.topCity || 'Unknown';
                     statsHtml = '<div class="url-stats">' +
                         '<div class="stat-row">' +
                             '<div class="stat-item"><span class="stat-label">${icons.barChart} Clicks:</span> ' + item.stats.clicks + '</div>' +
@@ -2632,6 +2638,9 @@ ${QR_MODAL_JS}
                         '</div>' +
                         '<div class="stat-row">' +
                             '<div class="stat-item"><span class="stat-label">${icons.globe} Top Country:</span> ' + topCountry + '</div>' +
+                            '<div class="stat-item"><span class="stat-label">${icons.mapPin} Top City:</span> ' + topCity + '</div>' +
+                        '</div>' +
+                        '<div class="stat-row">' +
                             '<div class="stat-item"><span class="stat-label">${icons.mapPin} Top Referrer:</span> ' + topReferrer + '</div>' +
                         '</div>' +
                         '<button class="log-toggle-btn" type="button" onclick="toggleClickLog(\\'' + item.shortCode + '\\', this)">${icons.list} <span>View recent hits</span></button>' +
@@ -2878,9 +2887,11 @@ ${QR_MODAL_JS}
                         const when = formatTimeAgo(entry.timestamp);
                         const full = new Date(entry.timestamp).toLocaleString();
                         const referrer = entry.referrer === 'Direct' ? 'Direct' : escapeHtml(entry.referrer);
+                        const location = entry.city ? entry.city + (entry.region ? ', ' + entry.region : '') : '';
                         return '<div class="log-entry">' +
                             '<span class="log-time" title="' + escapeAttr(full) + '">' + when + '</span>' +
                             '<span class="log-country">' + escapeHtml(entry.country || 'Unknown') + '</span>' +
+                            (location ? '<span class="log-city">' + escapeHtml(location) + '</span>' : '') +
                             '<span class="log-referrer">' + referrer + '</span>' +
                         '</div>';
                     }).join('');
@@ -3179,8 +3190,10 @@ async function trackClick(env, shortCode, request) {
     let stats = existingStats ? JSON.parse(existingStats) : {
       clicks: 0,
       referrers: {},
-      countries: {}
+      countries: {},
+      cities: {}
     };
+    if (!stats.cities) stats.cities = {}; // back-compat with stats saved before city tracking
 
     stats.clicks = (stats.clicks || 0) + 1;
     stats.lastClicked = Date.now();
@@ -3189,15 +3202,24 @@ async function trackClick(env, shortCode, request) {
     const referrerDomain = referrer === 'Direct' ? 'Direct' : new URL(referrer).hostname;
     stats.referrers[referrerDomain] = (stats.referrers[referrerDomain] || 0) + 1;
 
-    const country = request.headers.get('CF-IPCountry') || 'Unknown';
+    // request.cf carries Cloudflare's edge geolocation for this request -
+    // country, region (state/province) and city, all available on every
+    // plan. No IP address is read or stored anywhere here.
+    const cf = request.cf || {};
+    const country = cf.country || request.headers.get('CF-IPCountry') || 'Unknown';
+    const region = cf.region || '';
+    const city = cf.city || '';
     stats.countries[country] = (stats.countries[country] || 0) + 1;
+
+    const cityLabel = city ? (city + (region ? ', ' + region : '')) : 'Unknown';
+    stats.cities[cityLabel] = (stats.cities[cityLabel] || 0) + 1;
 
     await env.URLS.put(statsKey, JSON.stringify(stats));
 
     const logKey = 'clicklog:' + shortCode;
     const existingLog = await env.URLS.get(logKey);
     const log = existingLog ? JSON.parse(existingLog) : [];
-    log.unshift({ timestamp: stats.lastClicked, referrer, country });
+    log.unshift({ timestamp: stats.lastClicked, referrer, country, region, city });
     if (log.length > CLICK_LOG_LIMIT) log.length = CLICK_LOG_LIMIT;
     await env.URLS.put(logKey, JSON.stringify(log));
   } catch (error) {
@@ -3222,7 +3244,7 @@ async function getStats(env, shortCode) {
     const statsData = await env.URLS.get(statsKey);
 
     if (!statsData) {
-      return { clicks: 0, lastClicked: null, topReferrer: null, topCountry: null, referrers: {}, countries: {} };
+      return { clicks: 0, lastClicked: null, topReferrer: null, topCountry: null, topCity: null, referrers: {}, countries: {}, cities: {} };
     }
 
     const stats = JSON.parse(statsData);
@@ -3233,17 +3255,22 @@ async function getStats(env, shortCode) {
     const topCountry = Object.keys(stats.countries || {})
       .sort((a, b) => stats.countries[b] - stats.countries[a])[0] || null;
 
+    const topCity = Object.keys(stats.cities || {})
+      .sort((a, b) => stats.cities[b] - stats.cities[a])[0] || null;
+
     return {
       clicks: stats.clicks || 0,
       lastClicked: stats.lastClicked || null,
       topReferrer,
       topCountry,
+      topCity,
       referrers: stats.referrers || {},
-      countries: stats.countries || {}
+      countries: stats.countries || {},
+      cities: stats.cities || {}
     };
   } catch (error) {
     console.error('Error getting stats:', error);
-    return { clicks: 0, lastClicked: null, topReferrer: null, topCountry: null, referrers: {}, countries: {} };
+    return { clicks: 0, lastClicked: null, topReferrer: null, topCountry: null, topCity: null, referrers: {}, countries: {}, cities: {} };
   }
 }
 
