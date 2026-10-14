@@ -32,7 +32,13 @@ const icons = {
   search: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
   tag: '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
   qrCode: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>',
+  list: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
 };
+
+// How many individual hits to keep in the rolling per-link click log (newest
+// first). This is separate from the aggregate `stats:` counters, which are
+// unbounded running totals. No IP address is ever captured or stored.
+const CLICK_LOG_LIMIT = 50;
 
 // ---------------------------------------------------------------------------
 // QR code generation: shared library + modal, embedded into both the admin
@@ -150,10 +156,7 @@ const guideHtml = `<!DOCTYPE html>
     <title>Setup Guide - URL Shortener</title>
     <link rel="icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/favicon.ico">
     <link rel="apple-touch-icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/apple-touch-icon.png">
-    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#e73b42">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="chmp.me">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
@@ -1644,11 +1647,7 @@ const adminHtml = `<!DOCTYPE html>
     <link rel="apple-touch-icon" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/apple-touch-icon.png">
     <link rel="icon" sizes="192x192" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-192.png">
     <link rel="icon" sizes="512x512" href="https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/icon-512.png">
-    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#e73b42">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="chmp.me">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1847,6 +1846,68 @@ const adminHtml = `<!DOCTYPE html>
             display: flex;
             align-items: center;
             gap: 5px;
+        }
+
+        .log-toggle-btn {
+            width: auto;
+            background: none;
+            color: var(--color-accent);
+            border: none;
+            padding: 6px 0 0;
+            margin-top: 5px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+        .log-toggle-btn:hover { background: none; color: var(--color-accent-hover); transform: none; }
+
+        .click-log {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--color-border);
+            max-height: 240px;
+            overflow-y: auto;
+        }
+        .log-loading, .log-empty {
+            font-size: 12px;
+            color: var(--color-text-muted);
+            padding: 4px 0;
+        }
+        .log-entry {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 8px;
+            padding: 5px 0;
+            font-size: 12px;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .log-entry:last-child { border-bottom: none; }
+        .log-time {
+            color: var(--color-text-muted);
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: 60px;
+        }
+        .log-country {
+            color: var(--color-text);
+            font-weight: 500;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .log-city {
+            color: var(--color-text-muted);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .log-referrer {
+            color: var(--color-text-light);
+            word-break: break-all;
+            flex: 1;
+            min-width: 120px;
         }
 
         .stat-label {
@@ -2569,6 +2630,7 @@ ${QR_MODAL_JS}
                     const lastClicked = item.stats.lastClicked ? formatTimeAgo(item.stats.lastClicked) : 'Never';
                     const topReferrer = item.stats.topReferrer || 'Direct';
                     const topCountry = item.stats.topCountry || 'Unknown';
+                    const topCity = item.stats.topCity || 'Unknown';
                     statsHtml = '<div class="url-stats">' +
                         '<div class="stat-row">' +
                             '<div class="stat-item"><span class="stat-label">${icons.barChart} Clicks:</span> ' + item.stats.clicks + '</div>' +
@@ -2576,8 +2638,13 @@ ${QR_MODAL_JS}
                         '</div>' +
                         '<div class="stat-row">' +
                             '<div class="stat-item"><span class="stat-label">${icons.globe} Top Country:</span> ' + topCountry + '</div>' +
+                            '<div class="stat-item"><span class="stat-label">${icons.mapPin} Top City:</span> ' + topCity + '</div>' +
+                        '</div>' +
+                        '<div class="stat-row">' +
                             '<div class="stat-item"><span class="stat-label">${icons.mapPin} Top Referrer:</span> ' + topReferrer + '</div>' +
                         '</div>' +
+                        '<button class="log-toggle-btn" type="button" onclick="toggleClickLog(\\'' + item.shortCode + '\\', this)">${icons.list} <span>View recent hits</span></button>' +
+                        '<div class="click-log" id="clicklog-' + item.shortCode + '" style="display:none"></div>' +
                     '</div>';
                 }
 
@@ -2794,6 +2861,45 @@ ${QR_MODAL_JS}
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        async function toggleClickLog(shortCode, btn) {
+            const container = document.getElementById('clicklog-' + shortCode);
+            if (!container) return;
+
+            const nowOpen = container.style.display === 'none';
+            container.style.display = nowOpen ? 'block' : 'none';
+            btn.querySelector('span').textContent = nowOpen ? 'Hide recent hits' : 'View recent hits';
+            if (!nowOpen || container.dataset.loaded === '1') return;
+
+            container.innerHTML = '<div class="log-loading">Loading…</div>';
+            try {
+                const response = await fetch('/admin/clicklog/' + shortCode, { headers: { 'Authorization': authToken } });
+                const data = await response.json();
+                const log = data.log || [];
+                if (log.length === 0) {
+                    container.innerHTML = '<div class="log-empty">No recent hits recorded.</div>';
+                } else {
+                    const cappedNote = log.length >= ${CLICK_LOG_LIMIT}
+                        ? '<div class="log-empty">Showing the ${CLICK_LOG_LIMIT} most recent hits.</div>'
+                        : '';
+                    container.innerHTML = cappedNote + log.map(entry => {
+                        const when = formatTimeAgo(entry.timestamp);
+                        const full = new Date(entry.timestamp).toLocaleString();
+                        const referrer = entry.referrer === 'Direct' ? 'Direct' : escapeHtml(entry.referrer);
+                        const location = entry.city ? entry.city + (entry.region ? ', ' + entry.region : '') : '';
+                        return '<div class="log-entry">' +
+                            '<span class="log-time" title="' + escapeAttr(full) + '">' + when + '</span>' +
+                            '<span class="log-country">' + escapeHtml(entry.country || 'Unknown') + '</span>' +
+                            (location ? '<span class="log-city">' + escapeHtml(location) + '</span>' : '') +
+                            '<span class="log-referrer">' + referrer + '</span>' +
+                        '</div>';
+                    }).join('');
+                }
+                container.dataset.loaded = '1';
+            } catch (err) {
+                container.innerHTML = '<div class="log-empty">Failed to load recent hits.</div>';
+            }
         }
 
         async function copyUrl(shortCode, button) {
@@ -3084,8 +3190,10 @@ async function trackClick(env, shortCode, request) {
     let stats = existingStats ? JSON.parse(existingStats) : {
       clicks: 0,
       referrers: {},
-      countries: {}
+      countries: {},
+      cities: {}
     };
+    if (!stats.cities) stats.cities = {}; // back-compat with stats saved before city tracking
 
     stats.clicks = (stats.clicks || 0) + 1;
     stats.lastClicked = Date.now();
@@ -3094,12 +3202,39 @@ async function trackClick(env, shortCode, request) {
     const referrerDomain = referrer === 'Direct' ? 'Direct' : new URL(referrer).hostname;
     stats.referrers[referrerDomain] = (stats.referrers[referrerDomain] || 0) + 1;
 
-    const country = request.headers.get('CF-IPCountry') || 'Unknown';
+    // request.cf carries Cloudflare's edge geolocation for this request -
+    // country, region (state/province) and city, all available on every
+    // plan. No IP address is read or stored anywhere here.
+    const cf = request.cf || {};
+    const country = cf.country || request.headers.get('CF-IPCountry') || 'Unknown';
+    const region = cf.region || '';
+    const city = cf.city || '';
     stats.countries[country] = (stats.countries[country] || 0) + 1;
 
+    const cityLabel = city ? (city + (region ? ', ' + region : '')) : 'Unknown';
+    stats.cities[cityLabel] = (stats.cities[cityLabel] || 0) + 1;
+
     await env.URLS.put(statsKey, JSON.stringify(stats));
+
+    const logKey = 'clicklog:' + shortCode;
+    const existingLog = await env.URLS.get(logKey);
+    const log = existingLog ? JSON.parse(existingLog) : [];
+    log.unshift({ timestamp: stats.lastClicked, referrer, country, region, city });
+    if (log.length > CLICK_LOG_LIMIT) log.length = CLICK_LOG_LIMIT;
+    await env.URLS.put(logKey, JSON.stringify(log));
   } catch (error) {
     console.error('Error tracking click:', error);
+  }
+}
+
+async function getClickLog(env, shortCode) {
+  try {
+    const logKey = 'clicklog:' + shortCode;
+    const data = await env.URLS.get(logKey);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting click log:', error);
+    return [];
   }
 }
 
@@ -3109,7 +3244,7 @@ async function getStats(env, shortCode) {
     const statsData = await env.URLS.get(statsKey);
 
     if (!statsData) {
-      return { clicks: 0, lastClicked: null, topReferrer: null, topCountry: null, referrers: {}, countries: {} };
+      return { clicks: 0, lastClicked: null, topReferrer: null, topCountry: null, topCity: null, referrers: {}, countries: {}, cities: {} };
     }
 
     const stats = JSON.parse(statsData);
@@ -3120,17 +3255,22 @@ async function getStats(env, shortCode) {
     const topCountry = Object.keys(stats.countries || {})
       .sort((a, b) => stats.countries[b] - stats.countries[a])[0] || null;
 
+    const topCity = Object.keys(stats.cities || {})
+      .sort((a, b) => stats.cities[b] - stats.cities[a])[0] || null;
+
     return {
       clicks: stats.clicks || 0,
       lastClicked: stats.lastClicked || null,
       topReferrer,
       topCountry,
+      topCity,
       referrers: stats.referrers || {},
-      countries: stats.countries || {}
+      countries: stats.countries || {},
+      cities: stats.cities || {}
     };
   } catch (error) {
     console.error('Error getting stats:', error);
-    return { clicks: 0, lastClicked: null, topReferrer: null, topCountry: null, referrers: {}, countries: {} };
+    return { clicks: 0, lastClicked: null, topReferrer: null, topCountry: null, topCity: null, referrers: {}, countries: {}, cities: {} };
   }
 }
 
@@ -3170,6 +3310,11 @@ async function handleAdmin(request, env, path) {
   if (path.startsWith('/admin/stats/')) {
     const shortCode = path.split('/admin/stats/')[1];
     return handleGetStats(env, shortCode);
+  }
+
+  if (path.startsWith('/admin/clicklog/')) {
+    const shortCode = path.split('/admin/clicklog/')[1];
+    return handleGetClickLog(env, shortCode);
   }
 
   if (path.startsWith('/admin/delete/') && request.method === 'DELETE') {
@@ -3257,6 +3402,11 @@ async function handleGetStats(env, shortCode) {
   return jsonResponse(stats);
 }
 
+async function handleGetClickLog(env, shortCode) {
+  const log = await getClickLog(env, shortCode);
+  return jsonResponse({ log });
+}
+
 async function handleCreate(request, env) {
   try {
     const { url, title, shortCode, tags } = await request.json();
@@ -3314,7 +3464,7 @@ async function handleList(env) {
     const list = await env.URLS.list();
     const urls = await Promise.all(
       list.keys
-        .filter(key => !key.name.startsWith('stats:'))
+        .filter(key => !key.name.startsWith('stats:') && !key.name.startsWith('clicklog:'))
         .map(async (key) => {
           const raw = await env.URLS.get(key.name);
           const parsed = parseUrlValue(raw);
@@ -3354,6 +3504,7 @@ async function handleDelete(env, shortCode) {
 
   await env.URLS.delete(shortCode);
   await env.URLS.delete('stats:' + shortCode);
+  await env.URLS.delete('clicklog:' + shortCode);
   return jsonResponse({ success: true });
 }
 
@@ -3370,6 +3521,7 @@ async function handleBulkDelete(request, env) {
       if (raw) {
         await env.URLS.delete(code);
         await env.URLS.delete('stats:' + code);
+        await env.URLS.delete('clicklog:' + code);
         deleted++;
       }
     }));
@@ -3413,6 +3565,14 @@ async function handleEditShortCode(request, env) {
     if (statsData) {
       await env.URLS.put('stats:' + newCode, statsData);
       await env.URLS.delete(statsKey);
+    }
+
+    // Copy click log if it exists
+    const logKey = 'clicklog:' + oldCode;
+    const logData = await env.URLS.get(logKey);
+    if (logData) {
+      await env.URLS.put('clicklog:' + newCode, logData);
+      await env.URLS.delete(logKey);
     }
 
     // Delete old key
@@ -3483,7 +3643,7 @@ async function handleExport(env) {
     const list = await env.URLS.list();
     const urls = await Promise.all(
       list.keys
-        .filter(key => !key.name.startsWith('stats:'))
+        .filter(key => !key.name.startsWith('stats:') && !key.name.startsWith('clicklog:'))
         .map(async (key) => {
           const raw = await env.URLS.get(key.name);
           const parsed = parseUrlValue(raw);
