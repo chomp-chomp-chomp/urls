@@ -3495,7 +3495,6 @@ async function previewResponse(destUrl, storedTitle) {
     + '<meta property="og:url" content="' + escAttr(destUrl) + '">'
     + '<meta property="og:image" content="' + OG_IMAGE_URL + '">'
     + '<meta name="twitter:card" content="summary_large_image">'
-    + '<meta http-equiv="refresh" content="0;url=' + escAttr(destUrl) + '">'
     + '</head><body><a href="' + escAttr(destUrl) + '">' + escAttr(destUrl) + '</a></body></html>';
   return htmlResponse(html);
 }
