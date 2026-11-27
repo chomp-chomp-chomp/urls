@@ -3431,7 +3431,7 @@ async function handleRedirect(env, shortCode, request) {
   // Link-preview crawlers (iMessage, Slack, Facebook, etc.) get a small HTML
   // page with Open Graph tags so our own preview image is shown.
   if (isPreviewBot(request)) {
-    return previewResponse(parsed.url);
+    return previewResponse(parsed.url, parsed.title);
   }
 
   await trackClick(env, shortCode, request);
@@ -3470,10 +3470,22 @@ async function fetchDestinationTitle(destUrl) {
   return null;
 }
 
-async function previewResponse(destUrl) {
+// Titles that bot-protection / error pages return; never show these in a preview.
+const BOT_WALL_TITLE = /^(robot or human|access denied|just a moment|attention required|are you a (robot|human)|verify you are (a )?human|security check|pardon our interruption|request blocked|403 forbidden|captcha)/i;
+
+function usableTitle(t) {
+  if (!t) return null;
+  const clean = String(t).replace(/\s+/g, ' ').trim();
+  return clean && !BOT_WALL_TITLE.test(clean) ? clean : null;
+}
+
+async function previewResponse(destUrl, storedTitle) {
   let host = destUrl;
   try { host = new URL(destUrl).hostname.replace(/^www\./, ''); } catch (_) {}
-  const title = (await fetchDestinationTitle(destUrl)) || host;
+  // Prefer the title saved with the link; otherwise fetch it; otherwise use the domain.
+  const title = usableTitle(storedTitle)
+    || usableTitle(await fetchDestinationTitle(destUrl))
+    || host;
   const html = '<!DOCTYPE html><html><head><meta charset="utf-8">'
     + '<title>' + escAttr(title) + '</title>'
     + '<meta property="og:type" content="website">'
