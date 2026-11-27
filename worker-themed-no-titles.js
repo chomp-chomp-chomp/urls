@@ -3441,7 +3441,7 @@ async function handleRedirect(env, shortCode, request) {
 // ---------------------------------------------------------------------------
 // Link preview (Open Graph) support
 // ---------------------------------------------------------------------------
-const OG_IMAGE_URL = 'https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/og-image.png';
+const OG_IMAGE_URL = 'https://ik.imagekit.io/chompchomp/chompsharepreview.png';
 const OG_SITE_NAME = 'Chomp URLs';
 
 function isPreviewBot(request) {
