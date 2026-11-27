@@ -3474,6 +3474,12 @@ async function fetchDestinationMeta(destUrl) {
       redirect: 'follow',
       signal: AbortSignal.timeout(3000),
     });
+    // An error response (403/429/5xx...) is usually a bot-check or error page,
+    // so its title and description are not about the real destination.
+    if (res.status >= 400) {
+      try { await res.body.cancel(); } catch (_) {}
+      return { title: null, description: null };
+    }
     const html = (await res.text()).slice(0, 100000);
     const t = html.match(/<title[^>]*>([^<]+)<\/title>/i);
     return {
@@ -3487,10 +3493,13 @@ async function fetchDestinationMeta(destUrl) {
 // Titles that bot-protection / error pages return; never show these in a preview.
 const BOT_WALL_TITLE = /^(robot or human|access denied|just a moment|attention required|are you a (robot|human)|verify you are (a )?human|security check|pardon our interruption|request blocked|403 forbidden|captcha)/i;
 
+// Generic error-page titles, e.g. "Error", "Oops!", "Site – Error", "Page not found | Site".
+const ERROR_TITLE = /^error\s*[!.:|–—-]*\s*$|^(oops|404|403|500|page not found|not found|something went wrong|service unavailable|bad gateway|temporarily unavailable)\b|[–—|:-]\s*(error|page not found|404|403|access denied|unavailable)\s*$/i;
+
 function usableTitle(t) {
   if (!t) return null;
   const clean = String(t).replace(/\s+/g, ' ').trim();
-  return clean && !BOT_WALL_TITLE.test(clean) ? clean : null;
+  return clean && !BOT_WALL_TITLE.test(clean) && !ERROR_TITLE.test(clean) ? clean : null;
 }
 
 function truncate(str, max) {
