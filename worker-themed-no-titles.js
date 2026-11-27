@@ -3503,17 +3503,15 @@ function truncate(str, max) {
 const OG_TITLE_OVERLAY = true;
 
 // Builds the card URL with the link's title drawn under "Click here" using
-// ImageKit's text-overlay URL transformation. The card is 1731x909.
+// ImageKit's text-overlay URL transformation. The card is 1200x630.
 function previewImageUrl(title) {
   if (!OG_TITLE_OVERLAY || !title) return OG_IMAGE_URL;
   const bytes = new TextEncoder().encode(truncate(title, 70));
   let bin = '';
   for (const b of bytes) bin += String.fromCharCode(b);
   const text = encodeURIComponent(btoa(bin));
-  // "w-1731:" resizes the card first so the overlay coordinates below always
-  // refer to a 1731-wide image, whatever the uploaded file's real size is.
-  return OG_IMAGE_URL + '?tr=w-1731:l-text,ie-' + text
-    + ',fs-56,co-555555,w-1200,ia-center,lx-265,ly-600,l-end';
+  return OG_IMAGE_URL + '?tr=l-text,ie-' + text
+    + ',fs-42,co-555555,w-900,ia-center,lx-150,ly-400,l-end';
 }
 
 async function previewResponse(destUrl, storedTitle) {
