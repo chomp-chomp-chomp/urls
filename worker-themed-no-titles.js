@@ -3453,7 +3453,22 @@ function escAttr(str) {
   return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-async function fetchDestinationTitle(destUrl) {
+function decodeEntities(str) {
+  return String(str)
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+    .replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+}
+
+function metaContent(html, attr, name) {
+  const a = new RegExp('<meta[^>]+' + attr + '=["\']' + name + '["\'][^>]*content=["\']([^"\']*)["\']', 'i');
+  const b = new RegExp('<meta[^>]+content=["\']([^"\']*)["\'][^>]*' + attr + '=["\']' + name + '["\']', 'i');
+  const m = html.match(a) || html.match(b);
+  return m ? decodeEntities(m[1]) : null;
+}
+
+// Fetch the destination page and pull out its title and description.
+async function fetchDestinationMeta(destUrl) {
   try {
     const res = await fetch(destUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ChompPreview/1.0)', 'Accept': 'text/html' },
@@ -3461,13 +3476,13 @@ async function fetchDestinationTitle(destUrl) {
       signal: AbortSignal.timeout(3000),
     });
     const html = (await res.text()).slice(0, 100000);
-    const og = html.match(/<meta[^>]+property=["']og:title["'][^>]*content=["']([^"']+)["']/i)
-      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]*property=["']og:title["']/i);
-    if (og) return og[1];
     const t = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    if (t) return t[1].trim();
+    return {
+      title: metaContent(html, 'property', 'og:title') || (t ? decodeEntities(t[1]) : null),
+      description: metaContent(html, 'property', 'og:description') || metaContent(html, 'name', 'description'),
+    };
   } catch (_) {}
-  return null;
+  return { title: null, description: null };
 }
 
 // Titles that bot-protection / error pages return; never show these in a preview.
@@ -3479,21 +3494,42 @@ function usableTitle(t) {
   return clean && !BOT_WALL_TITLE.test(clean) ? clean : null;
 }
 
+function truncate(str, max) {
+  const t = String(str);
+  return t.length > max ? t.slice(0, max - 1).trimEnd() + '…' : t;
+}
+
+// Set to false to always use the plain card with no title text on it.
+const OG_TITLE_OVERLAY = true;
+
+// Builds the card URL with the link's title drawn under "Click here" using
+// ImageKit's text-overlay URL transformation. The card is 1200x630.
+function previewImageUrl(title) {
+  if (!OG_TITLE_OVERLAY || !title) return OG_IMAGE_URL;
+  const bytes = new TextEncoder().encode(truncate(title, 70));
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  const text = encodeURIComponent(btoa(bin));
+  return OG_IMAGE_URL + '?tr=l-text,ie-' + text
+    + ',fs-42,co-555555,w-900,ia-center,lx-150,ly-400,l-end';
+}
+
 async function previewResponse(destUrl, storedTitle) {
   let host = destUrl;
   try { host = new URL(destUrl).hostname.replace(/^www\./, ''); } catch (_) {}
-  // Prefer the title saved with the link; otherwise fetch it; otherwise use the domain.
-  const title = usableTitle(storedTitle)
-    || usableTitle(await fetchDestinationTitle(destUrl))
-    || host;
+  const meta = await fetchDestinationMeta(destUrl);
+  // Title: saved title, else fetched title, else the domain. Bot-check pages are ignored.
+  const title = usableTitle(storedTitle) || usableTitle(meta.title) || host;
+  // Description: destination's own description, else the domain.
+  const description = truncate(usableTitle(meta.description) || host, 200);
   const html = '<!DOCTYPE html><html><head><meta charset="utf-8">'
     + '<title>' + escAttr(title) + '</title>'
     + '<meta property="og:type" content="website">'
     + '<meta property="og:site_name" content="' + escAttr(OG_SITE_NAME) + '">'
     + '<meta property="og:title" content="' + escAttr(title) + '">'
-    + '<meta property="og:description" content="' + escAttr(host) + '">'
+    + '<meta property="og:description" content="' + escAttr(description) + '">'
     + '<meta property="og:url" content="' + escAttr(destUrl) + '">'
-    + '<meta property="og:image" content="' + OG_IMAGE_URL + '">'
+    + '<meta property="og:image" content="' + escAttr(previewImageUrl(title)) + '">'
     + '<meta name="twitter:card" content="summary_large_image">'
     + '</head><body><a href="' + escAttr(destUrl) + '">' + escAttr(destUrl) + '</a></body></html>';
   return htmlResponse(html);
