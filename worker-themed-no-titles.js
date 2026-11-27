@@ -3427,8 +3427,65 @@ async function handleRedirect(env, shortCode, request) {
   }
 
   const parsed = parseUrlValue(raw);
+
+  // Link-preview crawlers (iMessage, Slack, Facebook, etc.) get a small HTML
+  // page with Open Graph tags so our own preview image is shown.
+  if (isPreviewBot(request)) {
+    return previewResponse(parsed.url);
+  }
+
   await trackClick(env, shortCode, request);
   return Response.redirect(parsed.url, 302);
+}
+
+// ---------------------------------------------------------------------------
+// Link preview (Open Graph) support
+// ---------------------------------------------------------------------------
+const OG_IMAGE_URL = 'https://ik.imagekit.io/chompchomp/Chomp%20URL%20Shortener/og-image.png';
+const OG_SITE_NAME = 'Chomp URLs';
+
+function isPreviewBot(request) {
+  const ua = request.headers.get('User-Agent') || '';
+  return /facebookexternalhit|facebot|twitterbot|applebot|slackbot|linkedinbot|whatsapp|telegrambot|discordbot|skypeuripreview|imessage/i.test(ua);
+}
+
+function escAttr(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function fetchDestinationTitle(destUrl) {
+  try {
+    const res = await fetch(destUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ChompPreview/1.0)', 'Accept': 'text/html' },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(3000),
+    });
+    const html = (await res.text()).slice(0, 100000);
+    const og = html.match(/<meta[^>]+property=["']og:title["'][^>]*content=["']([^"']+)["']/i)
+      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]*property=["']og:title["']/i);
+    if (og) return og[1];
+    const t = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    if (t) return t[1].trim();
+  } catch (_) {}
+  return null;
+}
+
+async function previewResponse(destUrl) {
+  let host = destUrl;
+  try { host = new URL(destUrl).hostname.replace(/^www\./, ''); } catch (_) {}
+  const title = (await fetchDestinationTitle(destUrl)) || host;
+  const html = '<!DOCTYPE html><html><head><meta charset="utf-8">'
+    + '<title>' + escAttr(title) + '</title>'
+    + '<meta property="og:type" content="website">'
+    + '<meta property="og:site_name" content="' + escAttr(OG_SITE_NAME) + '">'
+    + '<meta property="og:title" content="' + escAttr(title) + '">'
+    + '<meta property="og:description" content="' + escAttr(host) + '">'
+    + '<meta property="og:url" content="' + escAttr(destUrl) + '">'
+    + '<meta property="og:image" content="' + OG_IMAGE_URL + '">'
+    + '<meta name="twitter:card" content="summary_large_image">'
+    + '<meta http-equiv="refresh" content="0;url=' + escAttr(destUrl) + '">'
+    + '</head><body><a href="' + escAttr(destUrl) + '">' + escAttr(destUrl) + '</a></body></html>';
+  return htmlResponse(html);
 }
 
 // ---------------------------------------------------------------------------
