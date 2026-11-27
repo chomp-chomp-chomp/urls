@@ -3510,8 +3510,10 @@ function previewImageUrl(title) {
   let bin = '';
   for (const b of bytes) bin += String.fromCharCode(b);
   const text = encodeURIComponent(btoa(bin));
-  return OG_IMAGE_URL + '?tr=l-text,ie-' + text
-    + ',fs-56,co-555555,w-1200,ia-center,lx-265,ly-620,l-end';
+  // "w-1731:" resizes the card first so the overlay coordinates below always
+  // refer to a 1731-wide image, whatever the uploaded file's real size is.
+  return OG_IMAGE_URL + '?tr=w-1731:l-text,ie-' + text
+    + ',fs-56,co-555555,w-1200,ia-center,lx-265,ly-600,l-end';
 }
 
 async function previewResponse(destUrl, storedTitle) {
