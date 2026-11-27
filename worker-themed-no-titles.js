@@ -3442,7 +3442,6 @@ async function handleRedirect(env, shortCode, request) {
 // Link preview (Open Graph) support
 // ---------------------------------------------------------------------------
 const OG_IMAGE_URL = 'https://ik.imagekit.io/chompchomp/Chomp-Chomp-sharing-card-Click-here.png';
-const OG_SITE_NAME = 'Chomp URLs';
 
 function isPreviewBot(request) {
   const ua = request.headers.get('User-Agent') || '';
@@ -3504,14 +3503,24 @@ const OG_TITLE_OVERLAY = true;
 
 // Builds the card URL with the link's title drawn under "Click here" using
 // ImageKit's text-overlay URL transformation. The card is 1200x630.
-function previewImageUrl(title) {
-  if (!OG_TITLE_OVERLAY || !title) return OG_IMAGE_URL;
-  const bytes = new TextEncoder().encode(truncate(title, 70));
+function overlayText(str) {
+  const bytes = new TextEncoder().encode(str);
   let bin = '';
   for (const b of bytes) bin += String.fromCharCode(b);
-  const text = encodeURIComponent(btoa(bin));
-  return OG_IMAGE_URL + '?tr=l-text,ie-' + text
+  return encodeURIComponent(btoa(bin));
+}
+
+// The title goes under "Click here"; the source domain is a small line at a
+// fixed spot near the bottom so a two-line title can't collide with it.
+function previewImageUrl(title, host) {
+  if (!OG_TITLE_OVERLAY || !title) return OG_IMAGE_URL;
+  let tr = 'l-text,ie-' + overlayText(truncate(title, 70))
     + ',fs-42,co-555555,w-900,ia-center,lx-150,ly-400,l-end';
+  if (host) {
+    tr += ':l-text,ie-' + overlayText(truncate(host, 40))
+      + ',fs-28,co-999999,w-900,ia-center,lx-150,ly-560,l-end';
+  }
+  return OG_IMAGE_URL + '?tr=' + tr;
 }
 
 async function previewResponse(destUrl, storedTitle) {
@@ -3525,11 +3534,11 @@ async function previewResponse(destUrl, storedTitle) {
   const html = '<!DOCTYPE html><html><head><meta charset="utf-8">'
     + '<title>' + escAttr(title) + '</title>'
     + '<meta property="og:type" content="website">'
-    + '<meta property="og:site_name" content="' + escAttr(OG_SITE_NAME) + '">'
+    + '<meta property="og:site_name" content="' + escAttr(host) + '">'
     + '<meta property="og:title" content="' + escAttr(title) + '">'
     + '<meta property="og:description" content="' + escAttr(description) + '">'
     + '<meta property="og:url" content="' + escAttr(destUrl) + '">'
-    + '<meta property="og:image" content="' + escAttr(previewImageUrl(title)) + '">'
+    + '<meta property="og:image" content="' + escAttr(previewImageUrl(title, host)) + '">'
     + '<meta name="twitter:card" content="summary_large_image">'
     + '</head><body><a href="' + escAttr(destUrl) + '">' + escAttr(destUrl) + '</a></body></html>';
   return htmlResponse(html);
